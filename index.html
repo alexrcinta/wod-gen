@@ -40,8 +40,6 @@
   <div id="root"></div>
   <script type="text/babel" data-presets="react">
 const { useState, useMemo } = React;
-  <script type="text/babel" data-presets="react">
-const { useState, useMemo } = React;
 
 const WORKOUTS = [
 
@@ -1036,16 +1034,6 @@ const WORKOUTS = [
 { id:498, cat:"WOD", label:"Snatch & Rings", ejercicios:["5 RFT — I go You go:","12 Cal Assault Bike","6 Power Snatch","3 Ring Muscle-Up"], tags:["snatch","power snatch","ring mu","ring muscle up","rft","wod","i go you go"] },
 ];
 
-const CAT_CONFIG = {
-  WARMUP:    { label: "Warm Up",            color: "#4ECDC4", icon: "🔥" },
-  STRENGTH:  { label: "Strength & Skills",  color: "#F5A623", icon: "💪" },
-  WOD:       { label: "WOD / Metcon",       color: "#FF6B6B", icon: "⏱️" },
-  TEAMWOD:   { label: "Team WOD",           color: "#A78BFA", icon: "🤝" },
-  ENDURANCE: { label: "Endurance",          color: "#34D399", icon: "🫀" },
-};
-
-const ALL_CATS = ["WARMUP","STRENGTH","WOD","TEAMWOD","ENDURANCE"];
-
 // ─── WARM UP GENERATOR DATABASE ───────────────────────────────────────────────
 const WARMUP_DB = {
   // Core/Abdomen — siempre disponibles para Parte A
@@ -1325,11 +1313,6 @@ function generateWarmup(keywords) {
   return { partA, partB, detected };
 }
 
-
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
-const STORAGE_KEY2 = "cwg_custom_v2";
-const loadCustom = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY2) || "[]"); } catch { return []; } };
-const saveCustom = (d) => { try { localStorage.setItem(STORAGE_KEY2, JSON.stringify(d)); } catch {} };
 
 function getByKeywords(cat, keywords) {
   const kws = keywords.toLowerCase().split(/[\s,]+/).filter(Boolean);
