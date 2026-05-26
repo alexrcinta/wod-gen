@@ -1,8 +1,9 @@
 {
   "name": "WOD Gen",
   "short_name": "WOD Gen",
-  "description": "CrossFit WOD Generator — MG Factory",
-  "start_url": "/",
+  "description": "CrossFit WOD Generator",
+  "start_url": "/wod-gen/",
+  "scope": "/wod-gen/",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#FFFFFF",
