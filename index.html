@@ -1531,7 +1531,7 @@ function Home({ onNav }) {
       <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:"center", padding:"0 24px", gap:12 }}>
         <HomeBtn icon="✦" label="Create Training" sub="Genera tu sesión completa" bg={T.graphite} color="#FFFAFA" subColor={T.petal} iconBg="rgba(248,161,99,0.15)" accent={T.sandy} onClick={()=>onNav("create")} />
         <HomeBtn icon="◈" label="Search Training" sub="Busca en la base de datos" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("search")} />
-        <HomeBtn icon="⏱" label="Timer Training" sub="AMRAP · EMOM · Intervalos" bg="rgba(248,161,99,0.07)" color={T.text} subColor={T.muted} iconBg={`${T.sandy}26`} accent={null} timerBorder={true} onClick={()=>onNav("timer")} />
+        <HomeBtn icon="◎" label="Timer Training" sub="UP/DOWN · Intervalos" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("timer")} />
         <HomeBtn icon="＋" label="Add Training" sub="Añade tus propios entrenamientos" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("add")} />
       </div>
 
@@ -1782,7 +1782,7 @@ function fmtTime(totalSec) {
 
 // Web Audio beep
 let _audioCtx = null;
-function beep(freq=880, duration=150, when=0) {
+function beep(freq=880, duration=200, when=0, vol=0.9) {
   try {
     if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const ctx = _audioCtx;
@@ -1790,17 +1790,20 @@ function beep(freq=880, duration=150, when=0) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.frequency.value = freq;
-    osc.type = "sine";
+    osc.type = "square";
     gain.gain.setValueAtTime(0.001, t);
-    gain.gain.exponentialRampToValueAtTime(0.4, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(vol, t + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.001, t + duration/1000);
     osc.connect(gain); gain.connect(ctx.destination);
-    osc.start(t); osc.stop(t + duration/1000);
+    osc.start(t); osc.stop(t + duration/1000 + 0.05);
   } catch(e) {}
 }
-function beepCountdown() { beep(660,150,0); beep(660,150,0.4); beep(660,150,0.8); }
-function beepChange() { beep(880,150,0); }
-function beepEnd() { beep(990,200,0); beep(990,200,0.3); beep(990,250,0.6); }
+// 3 countdown beeps — one per second, synced with clock
+function beepCountdown3() { beep(660,180,0); beep(660,180,1); beep(880,300,2); }
+// 1 beep on interval/round change
+function beepChange() { beep(880,200,0); }
+// 3 beeps at end
+function beepEnd() { beep(990,250,0); beep(990,250,0.4); beep(990,350,0.8); }
 
 // Time picker component (mm:ss via two rolling controls)
 function TimePicker({ totalSec, onChange, label }) {
@@ -1809,7 +1812,7 @@ function TimePicker({ totalSec, onChange, label }) {
   const adj = (dm, ds) => {
     let nm = m + dm, ns = s + ds;
     if (ns >= 60) { ns = 0; nm += 1; }
-    if (ns < 0) { ns = 55; nm = Math.max(0, nm-1); }
+    if (ns < 0) { ns = 59; nm = Math.max(0, nm-1); }
     nm = Math.max(0, Math.min(99, nm));
     onChange(nm*60 + ns);
   };
@@ -1825,8 +1828,8 @@ function TimePicker({ totalSec, onChange, label }) {
           {String(m).padStart(2,"0")}:{String(s).padStart(2,"0")}
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
-          <button onClick={()=>adj(0,5)} style={tpBtn}>▲</button>
-          <button onClick={()=>adj(0,-5)} style={tpBtn}>▼</button>
+          <button onClick={()=>adj(0,1)} style={tpBtn}>▲</button>
+          <button onClick={()=>adj(0,-1)} style={tpBtn}>▼</button>
         </div>
       </div>
     </div>
@@ -1893,21 +1896,22 @@ function TimerTraining({ onBack }) {
   }, [phase]);
 
   const startTimer = () => {
-    if (soundOn && _audioCtx === null) {
-      try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+    if (soundOn) {
+      try { if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
     }
     setPhase("active");
     if (countdownOn) {
       setInCountdown(true);
       setCdLeft(countdownSec);
-      if (soundOn) beepCountdown();
+      // Schedule 3 beeps for last 3 seconds of countdown
+      if (soundOn && countdownSec >= 3) beepCountdown3();
     } else {
-      beginWorkout();
+      beginWorkoutState();
     }
     setRunning(true);
   };
 
-  const beginWorkout = () => {
+  const beginWorkoutState = () => {
     setInCountdown(false);
     if (mode === "updown") {
       setElapsed(direction === "asc" ? 0 : updownSec);
@@ -1928,43 +1932,59 @@ function TimerTraining({ onBack }) {
   React.useEffect(() => {
     if (!running || phase !== "active") return;
     intervalRef.current = setInterval(() => {
-      // Countdown phase
+
+      // ── COUNTDOWN ──
       if (inCountdown) {
         setCdLeft(prev => {
-          if (prev <= 1) { beginWorkout(); return 0; }
-          return prev - 1;
+          const next = prev - 1;
+          if (next <= 0) { beginWorkoutState(); return 0; }
+          // beep on last 3 seconds of countdown (synced: when prev=4,3,2 → next=3,2,1)
+          if (soundOn && next <= 3) beep(next === 1 ? 880 : 660, 180, 0);
+          return next;
         });
         return;
       }
+
+      // ── UP/DOWN ──
       if (mode === "updown") {
         setElapsed(prev => {
           if (direction === "asc") {
-            if (prev + 1 >= updownSec) { if (soundOn) beepEnd(); setRunning(false); return updownSec; }
-            return prev + 1;
+            const next = prev + 1;
+            const remaining = updownSec - next;
+            if (remaining <= 0) { if (soundOn) beepEnd(); setRunning(false); return updownSec; }
+            if (soundOn && remaining <= 3) beep(remaining === 1 ? 880 : 660, 180, 0);
+            return next;
           } else {
-            if (prev - 1 <= 0) { if (soundOn) beepEnd(); setRunning(false); return 0; }
-            return prev - 1;
+            const next = prev - 1;
+            if (next <= 0) { if (soundOn) beepEnd(); setRunning(false); return 0; }
+            if (soundOn && next <= 3) beep(next === 1 ? 880 : 660, 180, 0);
+            return next;
           }
         });
-      } else {
-        setIntLeft(prev => {
-          if (prev <= 1) {
-            // advance interval/round
-            let ni = curInterval + 1;
-            let nr = curRound;
-            if (ni >= intervals.length) { ni = 0; nr += 1; }
-            if (nr > rounds) {
-              if (soundOn) beepEnd();
-              setRunning(false);
-              return 0;
-            }
-            setCurInterval(ni); setCurRound(nr);
-            if (soundOn) beepChange();
-            return intervals[ni];
-          }
-          return prev - 1;
-        });
+        return;
       }
+
+      // ── INTERVAL ──
+      setIntLeft(prev => {
+        const next = prev - 1;
+        if (next <= 0) {
+          let ni = curInterval + 1;
+          let nr = curRound;
+          if (ni >= intervals.length) { ni = 0; nr += 1; }
+          if (nr > rounds) {
+            if (soundOn) beepEnd();
+            setRunning(false);
+            return 0;
+          }
+          setCurInterval(ni); setCurRound(nr);
+          if (soundOn) beepChange();
+          return intervals[ni];
+        }
+        // beep on last 3 seconds of interval
+        if (soundOn && next <= 3) beep(next === 1 ? 880 : 660, 180, 0);
+        return next;
+      });
+
     }, 1000);
     return () => clearInterval(intervalRef.current);
   }, [running, phase, inCountdown, mode, direction, curInterval, curRound, intervals, rounds, updownSec, soundOn]);
@@ -1978,25 +1998,39 @@ function TimerTraining({ onBack }) {
         <div style={{ height:3, background:T.sandy, flexShrink:0 }} />
         <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
           {/* Exit */}
-          <button onClick={exitTimer} style={{ position:"absolute", top:18, left:20, width:38, height:38, borderRadius:"50%", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.5)", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10 }}>✕</button>
+          <button onClick={exitTimer} style={{ position:"absolute", top:18, left:20, width:38, height:38, borderRadius:"50%", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.4)", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10 }}>✕</button>
 
           {inCountdown ? (
-            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"40vw", fontWeight:700, color:T.sandy, lineHeight:1 }}>{cdLeft}</div>
+            // Countdown: muted taupe color, not sandy
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"45vw", fontWeight:700, color:T.taupe, lineHeight:1, opacity:0.85 }}>{cdLeft}</div>
+
           ) : mode === "interval" ? (
-            <>
-              {/* Rounds left, no slash */}
-              <div style={{ position:"absolute", left:"6vw", top:"50%", transform:"translateY(-50%)", fontFamily:"'DM Mono',monospace", display:"flex", flexDirection:"column", alignItems:"center", lineHeight:0.9 }}>
-                <span style={{ fontSize:"22vw", fontWeight:700, color:T.taupe, letterSpacing:"-0.04em" }}>{String(globalRound).padStart(2,"0")}</span>
-                <span style={{ fontSize:"11vw", fontWeight:400, color:T.muted, opacity:0.4 }}>{String(globalTotal).padStart(2,"0")}</span>
+            // Interval: split screen left=rounds, right=time, no overlap
+            // Use a flex row so both sides are constrained and never overlap
+            <div style={{ display:"flex", alignItems:"center", width:"100%", height:"100%", padding:"8px 16px 8px 64px" }}>
+              {/* Rounds column — left 30% */}
+              <div style={{ width:"30%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", lineHeight:0.85 }}>
+                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"18vw", fontWeight:700, color:T.taupe, letterSpacing:"-0.04em" }}>
+                  {String(globalRound).padStart(2,"0")}
+                </span>
+                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"9vw", fontWeight:400, color:T.muted, opacity:0.45, letterSpacing:"-0.03em" }}>
+                  {String(globalTotal).padStart(2,"0")}
+                </span>
               </div>
-              {/* Time right */}
-              <div style={{ position:"absolute", right:"5vw", top:"50%", transform:"translateY(-50%)", fontFamily:"'DM Mono',monospace", fontSize:"30vw", fontWeight:700, color:T.sandy, letterSpacing:"-0.04em", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
-                {fmtTime(intLeft)}
+              {/* Divider line */}
+              <div style={{ width:1, height:"55%", background:"rgba(255,255,255,0.08)", flexShrink:0, margin:"0 8px" }} />
+              {/* Time column — right 65% */}
+              <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"22vw", fontWeight:700, color:T.sandy, letterSpacing:"-0.04em", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
+                  {fmtTime(intLeft)}
+                </span>
               </div>
-            </>
+            </div>
+
           ) : (
+            // UP/DOWN: time centered
             <>
-              <div style={{ position:"absolute", top:20, right:28, fontSize:13, fontWeight:700, letterSpacing:"0.15em", color:T.muted, textTransform:"uppercase", opacity:0.45 }}>{direction === "asc" ? "▲ ASC" : "▼ DESC"}</div>
+              <div style={{ position:"absolute", top:20, right:28, fontSize:11, fontWeight:700, letterSpacing:"0.15em", color:T.muted, textTransform:"uppercase", opacity:0.4 }}>{direction === "asc" ? "▲ ASC" : "▼ DESC"}</div>
               <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"32vw", fontWeight:700, color:T.sandy, letterSpacing:"-0.04em", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
                 {fmtTime(elapsed)}
               </div>
