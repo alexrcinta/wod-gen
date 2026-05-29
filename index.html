@@ -1471,9 +1471,9 @@ function buildShareTextSingle(w) {
 }
 
 // ─── HOME ─────────────────────────────────────────────────────────────────────
-function HomeBtn({ icon, label, sub, bg, color, subColor, iconBg, accent, onClick }) {
+function HomeBtn({ icon, label, sub, bg, color, subColor, iconBg, accent, timerBorder, onClick }) {
   return (
-    <button onClick={onClick} style={{ width:"100%", padding:"18px 20px", background:bg, border:bg===T.surface?`1px solid ${T.border}`:"none", borderRadius:18, cursor:"pointer", textAlign:"left", fontFamily:T.font, display:"flex", alignItems:"center", gap:14, position:"relative", overflow:"hidden" }}>
+    <button onClick={onClick} style={{ width:"100%", padding:"18px 20px", background:bg, border:timerBorder?`1px solid rgba(248,161,99,0.35)`:(bg===T.surface?`1px solid ${T.border}`:"none"), borderRadius:18, cursor:"pointer", textAlign:"left", fontFamily:T.font, display:"flex", alignItems:"center", gap:14, position:"relative", overflow:"hidden" }}>
       {accent && <div style={{ position:"absolute", left:0, top:0, bottom:0, width:3, background:accent, borderRadius:"3px 0 0 3px" }} />}
       <div style={{ width:46, height:46, borderRadius:13, background:iconBg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0, color:T.sandy }}>{icon}</div>
       <div style={{ flex:1 }}>
@@ -1531,6 +1531,7 @@ function Home({ onNav }) {
       <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:"center", padding:"0 24px", gap:12 }}>
         <HomeBtn icon="✦" label="Create Training" sub="Genera tu sesión completa" bg={T.graphite} color="#FFFAFA" subColor={T.petal} iconBg="rgba(248,161,99,0.15)" accent={T.sandy} onClick={()=>onNav("create")} />
         <HomeBtn icon="◈" label="Search Training" sub="Busca en la base de datos" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("search")} />
+        <HomeBtn icon="⏱" label="Timer Training" sub="AMRAP · EMOM · Intervalos" bg="rgba(248,161,99,0.07)" color={T.text} subColor={T.muted} iconBg={`${T.sandy}26`} accent={null} timerBorder={true} onClick={()=>onNav("timer")} />
         <HomeBtn icon="＋" label="Add Training" sub="Añade tus propios entrenamientos" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("add")} />
       </div>
 
@@ -1772,6 +1773,341 @@ function AddTraining({ onBack }) {
   );
 }
 
+// ─── TIMER TRAINING ───────────────────────────────────────────────────────────
+function fmtTime(totalSec) {
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+// Web Audio beep
+let _audioCtx = null;
+function beep(freq=880, duration=150, when=0) {
+  try {
+    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = _audioCtx;
+    const t = ctx.currentTime + when;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = freq;
+    osc.type = "sine";
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.exponentialRampToValueAtTime(0.4, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + duration/1000);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + duration/1000);
+  } catch(e) {}
+}
+function beepCountdown() { beep(660,150,0); beep(660,150,0.4); beep(660,150,0.8); }
+function beepChange() { beep(880,150,0); }
+function beepEnd() { beep(990,200,0); beep(990,200,0.3); beep(990,250,0.6); }
+
+// Time picker component (mm:ss via two rolling controls)
+function TimePicker({ totalSec, onChange, label }) {
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  const adj = (dm, ds) => {
+    let nm = m + dm, ns = s + ds;
+    if (ns >= 60) { ns = 0; nm += 1; }
+    if (ns < 0) { ns = 55; nm = Math.max(0, nm-1); }
+    nm = Math.max(0, Math.min(99, nm));
+    onChange(nm*60 + ns);
+  };
+  return (
+    <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:16, padding:"16px 20px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <span style={{ fontSize:14, color:T.text }}>{label}</span>
+      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+        <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
+          <button onClick={()=>adj(1,0)} style={tpBtn}>▲</button>
+          <button onClick={()=>adj(-1,0)} style={tpBtn}>▼</button>
+        </div>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:28, fontWeight:700, color:T.sandy, letterSpacing:"-1px", minWidth:88, textAlign:"center" }}>
+          {String(m).padStart(2,"0")}:{String(s).padStart(2,"0")}
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
+          <button onClick={()=>adj(0,5)} style={tpBtn}>▲</button>
+          <button onClick={()=>adj(0,-5)} style={tpBtn}>▼</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+const tpBtn = { width:28, height:22, borderRadius:7, border:`1px solid ${T.border}`, background:T.bg, color:T.muted, fontSize:9, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"sans-serif" };
+
+function Stepper({ value, onChange, min=1, max=99 }) {
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+      <button onClick={()=>onChange(Math.max(min, value-1))} style={stBtn}>−</button>
+      <span style={{ fontSize:16, fontWeight:700, color:T.sandy, minWidth:40, textAlign:"center" }}>{value}</span>
+      <button onClick={()=>onChange(Math.min(max, value+1))} style={stBtn}>+</button>
+    </div>
+  );
+}
+const stBtn = { width:32, height:32, borderRadius:"50%", border:`1px solid ${T.border}`, background:T.bg, fontSize:18, color:T.text, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontFamily:"sans-serif" };
+
+function TimerTraining({ onBack }) {
+  const [mode, setMode] = useState("updown"); // updown | interval
+  const [phase, setPhase] = useState("config"); // config | active
+
+  // UP/DOWN config
+  const [direction, setDirection] = useState("desc");
+  const [updownSec, setUpdownSec] = useState(15*60);
+
+  // INTERVAL config
+  const [rounds, setRounds] = useState(3);
+  const [intervals, setIntervals] = useState([60]); // array of seconds, max 4
+
+  // Common
+  const [countdownOn, setCountdownOn] = useState(true);
+  const [countdownSec, setCountdownSec] = useState(10);
+  const [soundOn, setSoundOn] = useState(true);
+
+  // Active state
+  const [running, setRunning] = useState(false);
+  const [inCountdown, setInCountdown] = useState(false);
+  const [cdLeft, setCdLeft] = useState(0);
+  const [elapsed, setElapsed] = useState(0); // for updown asc / interval tracking
+  const [curRound, setCurRound] = useState(1);
+  const [curInterval, setCurInterval] = useState(0);
+  const [intLeft, setIntLeft] = useState(0);
+  const intervalRef = React.useRef(null);
+
+  const totalIntervalSec = intervals.reduce((a,b)=>a+b, 0);
+  const totalWorkout = rounds * totalIntervalSec;
+
+  const addInterval = () => { if (intervals.length < 4) setIntervals([...intervals, 60]); };
+  const removeInterval = (i) => { if (intervals.length > 1) setIntervals(intervals.filter((_,idx)=>idx!==i)); };
+  const updateInterval = (i, sec) => setIntervals(intervals.map((v,idx)=>idx===i?sec:v));
+
+  // Lock orientation to landscape on active (best effort)
+  React.useEffect(() => {
+    if (phase === "active") {
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock("landscape").catch(()=>{});
+        }
+      } catch(e) {}
+    } else {
+      try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e) {}
+    }
+  }, [phase]);
+
+  const startTimer = () => {
+    if (soundOn && _audioCtx === null) {
+      try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+    }
+    setPhase("active");
+    if (countdownOn) {
+      setInCountdown(true);
+      setCdLeft(countdownSec);
+      if (soundOn) beepCountdown();
+    } else {
+      beginWorkout();
+    }
+    setRunning(true);
+  };
+
+  const beginWorkout = () => {
+    setInCountdown(false);
+    if (mode === "updown") {
+      setElapsed(direction === "asc" ? 0 : updownSec);
+    } else {
+      setCurRound(1); setCurInterval(0); setIntLeft(intervals[0]);
+    }
+    if (soundOn) beepChange();
+  };
+
+  const exitTimer = () => {
+    setRunning(false);
+    setInCountdown(false);
+    setPhase("config");
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
+
+  // Main tick
+  React.useEffect(() => {
+    if (!running || phase !== "active") return;
+    intervalRef.current = setInterval(() => {
+      // Countdown phase
+      if (inCountdown) {
+        setCdLeft(prev => {
+          if (prev <= 1) { beginWorkout(); return 0; }
+          return prev - 1;
+        });
+        return;
+      }
+      if (mode === "updown") {
+        setElapsed(prev => {
+          if (direction === "asc") {
+            if (prev + 1 >= updownSec) { if (soundOn) beepEnd(); setRunning(false); return updownSec; }
+            return prev + 1;
+          } else {
+            if (prev - 1 <= 0) { if (soundOn) beepEnd(); setRunning(false); return 0; }
+            return prev - 1;
+          }
+        });
+      } else {
+        setIntLeft(prev => {
+          if (prev <= 1) {
+            // advance interval/round
+            let ni = curInterval + 1;
+            let nr = curRound;
+            if (ni >= intervals.length) { ni = 0; nr += 1; }
+            if (nr > rounds) {
+              if (soundOn) beepEnd();
+              setRunning(false);
+              return 0;
+            }
+            setCurInterval(ni); setCurRound(nr);
+            if (soundOn) beepChange();
+            return intervals[ni];
+          }
+          return prev - 1;
+        });
+      }
+    }, 1000);
+    return () => clearInterval(intervalRef.current);
+  }, [running, phase, inCountdown, mode, direction, curInterval, curRound, intervals, rounds, updownSec, soundOn]);
+
+  // ─── ACTIVE SCREEN ───
+  if (phase === "active") {
+    const globalRound = mode === "interval" ? ((curRound-1)*intervals.length + curInterval + 1) : 0;
+    const globalTotal = mode === "interval" ? (rounds * intervals.length) : 0;
+    return (
+      <div style={{ position:"fixed", inset:0, background:T.graphite, zIndex:9999, display:"flex", flexDirection:"column" }}>
+        <div style={{ height:3, background:T.sandy, flexShrink:0 }} />
+        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
+          {/* Exit */}
+          <button onClick={exitTimer} style={{ position:"absolute", top:18, left:20, width:38, height:38, borderRadius:"50%", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.5)", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10 }}>✕</button>
+
+          {inCountdown ? (
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"40vw", fontWeight:700, color:T.sandy, lineHeight:1 }}>{cdLeft}</div>
+          ) : mode === "interval" ? (
+            <>
+              {/* Rounds left, no slash */}
+              <div style={{ position:"absolute", left:"6vw", top:"50%", transform:"translateY(-50%)", fontFamily:"'DM Mono',monospace", display:"flex", flexDirection:"column", alignItems:"center", lineHeight:0.9 }}>
+                <span style={{ fontSize:"22vw", fontWeight:700, color:T.taupe, letterSpacing:"-0.04em" }}>{String(globalRound).padStart(2,"0")}</span>
+                <span style={{ fontSize:"11vw", fontWeight:400, color:T.muted, opacity:0.4 }}>{String(globalTotal).padStart(2,"0")}</span>
+              </div>
+              {/* Time right */}
+              <div style={{ position:"absolute", right:"5vw", top:"50%", transform:"translateY(-50%)", fontFamily:"'DM Mono',monospace", fontSize:"30vw", fontWeight:700, color:T.sandy, letterSpacing:"-0.04em", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
+                {fmtTime(intLeft)}
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ position:"absolute", top:20, right:28, fontSize:13, fontWeight:700, letterSpacing:"0.15em", color:T.muted, textTransform:"uppercase", opacity:0.45 }}>{direction === "asc" ? "▲ ASC" : "▼ DESC"}</div>
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"32vw", fontWeight:700, color:T.sandy, letterSpacing:"-0.04em", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
+                {fmtTime(elapsed)}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ─── CONFIG SCREEN ───
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
+      <PageHeader title="Timer Training" sub="Configura tu cronómetro" onBack={onBack} />
+      <div style={{ padding:"20px 20px 120px" }}>
+
+        {/* Mode selector */}
+        <div style={{ display:"flex", gap:10, marginBottom:28 }}>
+          {[["updown","⬆⬇ UP/DOWN"],["interval","🔁 INTERVAL"]].map(([k,lbl])=>(
+            <button key={k} onClick={()=>setMode(k)} style={{ flex:1, padding:14, borderRadius:16, border:`1px solid ${mode===k?T.graphite:T.border}`, background:mode===k?T.graphite:T.surface, color:mode===k?"#FFFAFA":T.muted, fontSize:13, fontWeight:600, fontFamily:T.font, cursor:"pointer" }}>{lbl}</button>
+          ))}
+        </div>
+
+        {mode === "updown" && (
+          <>
+            <div style={secLabel}>Dirección</div>
+            <div style={{ display:"flex", borderRadius:12, overflow:"hidden", border:`1px solid ${T.border}`, marginBottom:20 }}>
+              <button onClick={()=>setDirection("asc")} style={{ flex:1, padding:"12px 14px", fontSize:13, fontWeight:600, fontFamily:T.font, border:"none", cursor:"pointer", background:direction==="asc"?T.graphite:T.surface, color:direction==="asc"?"#FFFAFA":T.muted }}>▲ Ascendente</button>
+              <button onClick={()=>setDirection("desc")} style={{ flex:1, padding:"12px 14px", fontSize:13, fontWeight:600, fontFamily:T.font, border:"none", cursor:"pointer", background:direction==="desc"?T.graphite:T.surface, color:direction==="desc"?"#FFFAFA":T.muted }}>▼ Descendente</button>
+            </div>
+            <div style={secLabel}>Tiempo</div>
+            <div style={{ marginBottom:20 }}>
+              <TimePicker totalSec={updownSec} onChange={setUpdownSec} label="Duración" />
+            </div>
+          </>
+        )}
+
+        {mode === "interval" && (
+          <>
+            <div style={secLabel}>Rondas</div>
+            <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:16, padding:"14px 16px", display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+              <span style={{ fontSize:14, color:T.text }}>Número de rondas</span>
+              <Stepper value={rounds} onChange={setRounds} min={1} max={99} />
+            </div>
+
+            <div style={{ ...secLabel, display:"flex", justifyContent:"space-between" }}>
+              <span>Intervalos</span>
+              <span style={{ fontSize:10, color:T.muted, fontWeight:400, textTransform:"none", letterSpacing:0 }}>máx. 4</span>
+            </div>
+            {intervals.map((sec, i) => (
+              <div key={i} style={{ borderRadius:14, border:`1px solid ${T.border}`, overflow:"hidden", marginBottom:10 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 14px", background:T.surface, borderBottom:`1px solid ${T.border}` }}>
+                  <span style={{ fontSize:12, fontWeight:700, letterSpacing:"0.06em", color:T.sandy, textTransform:"uppercase" }}>Intervalo {i+1}</span>
+                  {intervals.length > 1 && <button onClick={()=>removeInterval(i)} style={{ fontSize:11, color:T.muted, background:"none", border:"none", cursor:"pointer", fontFamily:T.font }}>✕ eliminar</button>}
+                </div>
+                <div style={{ background:T.bg, padding:"10px 14px" }}>
+                  <TimePicker totalSec={sec} onChange={(s)=>updateInterval(i,s)} label="Tiempo" />
+                </div>
+              </div>
+            ))}
+            {intervals.length < 4 && (
+              <button onClick={addInterval} style={{ width:"100%", padding:13, borderRadius:14, border:`1px dashed ${T.border}`, background:"transparent", fontSize:13, fontWeight:500, color:T.muted, fontFamily:T.font, cursor:"pointer" }}>＋ Añadir intervalo</button>
+            )}
+
+            <div style={{ background:"rgba(248,161,99,0.08)", border:"1px solid rgba(248,161,99,0.25)", borderRadius:14, padding:"14px 16px", margin:"16px 0" }}>
+              <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", color:T.sandy, textTransform:"uppercase", marginBottom:6 }}>Vista previa</div>
+              <div style={{ fontSize:14, color:T.text, fontWeight:500 }}>
+                {rounds} rondas × {intervals.length>1?`(${intervals.map(s=>fmtTime(s).replace(/^00:/,'').replace(/^0/,'')).join(" + ")})`:fmtTime(intervals[0])} = {fmtTime(totalWorkout)} total
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Countdown toggle */}
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", marginBottom:12 }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 16px" }}>
+            <span style={{ fontSize:14, color:T.text }}>⏳ Cuenta atrás inicial</span>
+            <Toggle on={countdownOn} onClick={()=>setCountdownOn(v=>!v)} />
+          </div>
+          {countdownOn && (
+            <div style={{ borderTop:`1px solid ${T.border}` }}>
+              <TimePicker totalSec={countdownSec} onChange={setCountdownSec} label="Tiempo de preparación" />
+            </div>
+          )}
+        </div>
+
+        {/* Sound toggle */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, padding:"14px 16px" }}>
+          <span style={{ fontSize:13, color:T.text, fontWeight:500 }}>🔔 Señales sonoras</span>
+          <Toggle on={soundOn} onClick={()=>setSoundOn(v=>!v)} />
+        </div>
+      </div>
+
+      {/* Start button fixed bottom */}
+      <div style={{ position:"fixed", bottom:0, left:0, right:0, padding:"16px 20px max(20px, env(safe-area-inset-bottom))", background:`linear-gradient(to top, ${T.bg} 70%, transparent)` }}>
+        <button onClick={startTimer} style={{ width:"100%", padding:18, background:T.sandy, border:"none", borderRadius:16, fontSize:16, fontWeight:700, color:"#FFFAFA", fontFamily:T.font, cursor:"pointer" }}>Iniciar →</button>
+      </div>
+    </div>
+  );
+}
+
+const secLabel = { fontSize:11, fontWeight:700, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:10 };
+
+function Toggle({ on, onClick }) {
+  return (
+    <button onClick={onClick} style={{ width:44, height:26, borderRadius:13, position:"relative", background:on?T.sandy:T.border, border:"none", cursor:"pointer", flexShrink:0, transition:"background 0.2s" }}>
+      <div style={{ position:"absolute", width:20, height:20, background:"white", borderRadius:"50%", top:3, left:on?21:3, boxShadow:"0 1px 3px rgba(0,0,0,0.2)", transition:"left 0.2s" }} />
+    </button>
+  );
+}
+
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 function App() {
   const [screen, setScreen] = useState("home");
@@ -1780,6 +2116,7 @@ function App() {
       {screen==="home"   && <Home onNav={setScreen} />}
       {screen==="create" && <CreateTraining onBack={()=>setScreen("home")} />}
       {screen==="search" && <SearchTraining onBack={()=>setScreen("home")} />}
+      {screen==="timer"  && <TimerTraining onBack={()=>setScreen("home")} />}
       {screen==="add"    && <AddTraining onBack={()=>setScreen("home")} />}
     </>
   );
