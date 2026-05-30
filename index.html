@@ -2103,10 +2103,13 @@ function TimerTraining({ onBack }) {
     return () => clearInterval(intervalRef.current);
   }, [running, phase, paused, inCountdown, mode, direction, curInterval, curRound, intervals, rounds, updownSec, soundOn]);
 
+  const intervalColors = ["#F8A163", "#DECEC5", "#F8A163", "#DECEC5"]; // Sandy, Petal, Sandy, Petal
+  const getIntervalColor = (intervalIndex) => intervalColors[intervalIndex % intervalColors.length];
+
   // ─── ACTIVE SCREEN ───
   if (phase === "active") {
-    const globalRound = mode === "interval" ? ((curRound-1)*intervals.length + curInterval + 1) : 0;
-    const globalTotal = mode === "interval" ? (rounds * intervals.length) : 0;
+    const globalRound = curRound;
+    const globalTotal = rounds;
     return (
       <div onClick={togglePause} style={{ position:"fixed", inset:0, background:T.graphite, zIndex:9999, display:"flex", flexDirection:"column", cursor:"pointer" }}>
         <div style={{ height:3, background:T.sandy, flexShrink:0 }} />
@@ -2142,7 +2145,7 @@ function TimerTraining({ onBack }) {
               <div style={{ width:1, height:"55%", background:"rgba(255,255,255,0.08)", flexShrink:0, margin:"0 8px" }} />
               {/* Time column — right 65% */}
               <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"22vw", fontWeight:700, color:T.sandy, letterSpacing:"-0.04em", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
+                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"22vw", fontWeight:700, color:getIntervalColor(curInterval), letterSpacing:"-0.04em", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
                   {fmtTime(intLeft)}
                 </span>
               </div>
