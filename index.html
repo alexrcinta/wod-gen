@@ -1676,7 +1676,7 @@ function OfficialsMenu({ onNav, onBack }) {
           style={{
             width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, 
             border:`1px solid ${T.border}`, background:T.surface2, textAlign:"left", position:"relative", overflow:"hidden",
-            cursor:"pointer", transition:"all 0.2s", ...bstyle
+            cursor:"pointer", transition:"all 0.2s"
           }}
           onMouseEnter={(e) => e.currentTarget.style.background = T.surface}
           onMouseLeave={(e) => e.currentTarget.style.background = T.surface2}
@@ -2159,6 +2159,53 @@ function TimerTraining({ onBack }) {
     }
   }, [phase]);
 
+  // Keep screen active during timer (Screen Wake Lock API)
+  React.useEffect(() => {
+    let wakeLock = null;
+    
+    const acquireWakeLock = async () => {
+      try {
+        if (navigator.wakeLock) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('✓ Pantalla bloqueada - activa durante timer');
+          
+          // Si el usuario bloquea el teléfono, reintentamos
+          wakeLock.addEventListener('release', async () => {
+            console.log('⚠ Wake lock liberado, reintentando...');
+            try {
+              if (phase === "active") {
+                wakeLock = await navigator.wakeLock.request('screen');
+              }
+            } catch(e) {
+              console.log('No se pudo reactivar wake lock:', e);
+            }
+          });
+        }
+      } catch(e) {
+        console.log('Wake Lock no disponible:', e.message);
+      }
+    };
+    
+    // Activar wake lock si estamos en fase ACTIVE (corriendo O pausado)
+    if (phase === "active") {
+      acquireWakeLock();
+    } else if (wakeLock) {
+      // Solo liberar cuando SALIMOS del timer (volvemos a config)
+      wakeLock.release().then(() => {
+        wakeLock = null;
+        console.log('✓ Pantalla desbloqueada');
+      }).catch(()=>{});
+    }
+    
+    return () => {
+      // Cleanup al desmontar
+      if (wakeLock) {
+        wakeLock.release().catch(()=>{});
+        wakeLock = null;
+      }
+    };
+  }, [phase]);
+
   const togglePause = () => {
     setPaused(p => !p);
   };
@@ -2426,7 +2473,7 @@ function OpenGamesYears({onNav, onBack}) {
   return (
     <div style={{padding: '20px', background: T.bg, minHeight: '100vh'}}>
       <div style={{marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px'}}>
-        <button onClick={onBack} style={{...bstyle, padding: '8px 12px', fontSize: '16px'}}>✕</button>
+        <button onClick={onBack} style={{padding: '8px 12px', fontSize: '16px', border: 'none', background: 'transparent', cursor: 'pointer', color: T.text}}>✕</button>
         <div style={{flex: 1}}>
           <h2 style={{margin: 0, color: T.text, fontSize: '22px', fontWeight: '300'}}>OPEN GAMES</h2>
           <p style={{margin: '4px 0 0 0', color: T.muted, fontSize: '13px'}}>Selecciona un año</p>
@@ -2441,7 +2488,6 @@ function OpenGamesYears({onNav, onBack}) {
               key={year}
               onClick={() => onNav(`openGames-year-${year}`)}
               style={{
-                ...bstyle,
                 padding: '16px',
                 background: T.surface2,
                 border: `1px solid ${T.border}`,
@@ -2469,7 +2515,7 @@ function OpenGamesYear({year, onNav, onBack}) {
   return (
     <div style={{padding: '20px', background: T.bg, minHeight: '100vh'}}>
       <div style={{marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px'}}>
-        <button onClick={onBack} style={{...bstyle, padding: '8px 12px', fontSize: '16px'}}>✕</button>
+        <button onClick={onBack} style={{padding: '8px 12px', fontSize: '16px', border: 'none', background: 'transparent', cursor: 'pointer', color: T.text}}>✕</button>
         <div style={{flex: 1}}>
           <h2 style={{margin: 0, color: T.text, fontSize: '22px', fontWeight: '300'}}>Open Games {year}</h2>
           <p style={{margin: '4px 0 0 0', color: T.muted, fontSize: '13px'}}>{wods.length} WODs</p>
@@ -2490,8 +2536,7 @@ function OpenGamesYear({year, onNav, onBack}) {
                 cursor: 'pointer',
                 display: 'flex',
                 justifyItems: 'center',
-                justifyContent: 'space-between',
-                ...bstyle
+                justifyContent: 'space-between'
               }}
             >
               <div>
