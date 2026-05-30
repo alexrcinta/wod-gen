@@ -1532,6 +1532,7 @@ function Home({ onNav }) {
         <HomeBtn icon="✦" label="Create Training" sub="Genera tu sesión completa" bg={T.graphite} color="#FFFAFA" subColor={T.petal} iconBg="rgba(248,161,99,0.15)" accent={T.sandy} onClick={()=>onNav("create")} />
         <HomeBtn icon="◈" label="Search Training" sub="Busca en la base de datos" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("search")} />
         <HomeBtn icon="◎" label="Timer Training" sub="UP/DOWN · Intervalos" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("timer")} />
+        <HomeBtn icon="⇄" label="Unit Converter" sub="kg · lb · m · ft" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("converter")} />
         <HomeBtn icon="＋" label="Add Training" sub="Añade tus propios entrenamientos" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("add")} />
       </div>
 
@@ -1768,6 +1769,114 @@ function AddTraining({ onBack }) {
             </>)}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── UNIT CONVERTER ───────────────────────────────────────────────────────────
+function UnitConverter({ onBack }) {
+  const [mode, setMode] = useState("weight"); // weight | length
+  const [value, setValue] = useState(100);
+  const [direction, setDirection] = useState("kg-to-lb"); // kg-to-lb | lb-to-kg | m-to-ft | ft-to-m
+
+  const convert = (val, from, to) => {
+    if (from === "kg" && to === "lb") return (val * 2.20462).toFixed(2);
+    if (from === "lb" && to === "kg") return (val / 2.20462).toFixed(2);
+    if (from === "m" && to === "ft") return (val * 3.28084).toFixed(2);
+    if (from === "ft" && to === "m") return (val / 3.28084).toFixed(2);
+    return 0;
+  };
+
+  const getConvertData = () => {
+    if (mode === "weight") {
+      const [from, to] = direction === "kg-to-lb" ? ["kg", "lb"] : ["lb", "kg"];
+      return { from, to, result: convert(value, from, to) };
+    } else {
+      const [from, to] = direction === "m-to-ft" ? ["m", "ft"] : ["ft", "m"];
+      return { from, to, result: convert(value, from, to) };
+    }
+  };
+
+  const { from, to, result } = getConvertData();
+
+  const toggleDirection = () => {
+    if (mode === "weight") {
+      setDirection(direction === "kg-to-lb" ? "lb-to-kg" : "kg-to-lb");
+    } else {
+      setDirection(direction === "m-to-ft" ? "ft-to-m" : "m-to-ft");
+    }
+  };
+
+  // Generate reference table
+  const getRefTable = () => {
+    if (mode === "weight") {
+      const rows = [];
+      for (let i = 10; i <= 200; i += 10) {
+        rows.push({ from: `${i} kg`, to: `${(i * 2.20462).toFixed(2)} lb` });
+      }
+      return rows;
+    } else {
+      const rows = [];
+      for (let i = 5; i <= 100; i += 5) {
+        rows.push({ from: `${i} m`, to: `${(i * 3.28084).toFixed(2)} ft` });
+      }
+      return rows;
+    }
+  };
+
+  const refTable = getRefTable();
+
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
+      <PageHeader title="Unit Converter" onBack={onBack} />
+      <div style={{ padding:"20px 20px 40px" }}>
+
+        {/* Tabs */}
+        <div style={{ display:"flex", background:T.surface, borderRadius:14, border:`1px solid ${T.border}`, padding:4, marginBottom:28, gap:4 }}>
+          <button onClick={()=>{setMode("weight");setDirection("kg-to-lb");}} style={{ flex:1, padding:10, borderRadius:10, border:"none", fontSize:13, fontWeight:600, fontFamily:T.font, textAlign:"center", cursor:"pointer", background:mode==="weight"?T.bg:"transparent", color:mode==="weight"?T.text:T.muted, boxShadow:mode==="weight"?"0 1px 4px rgba(49,47,47,0.1)":"none" }}>⚖ Weight</button>
+          <button onClick={()=>{setMode("length");setDirection("m-to-ft");}} style={{ flex:1, padding:10, borderRadius:10, border:"none", fontSize:13, fontWeight:600, fontFamily:T.font, textAlign:"center", cursor:"pointer", background:mode==="length"?T.bg:"transparent", color:mode==="length"?T.text:T.muted, boxShadow:mode==="length"?"0 1px 4px rgba(49,47,47,0.1)":"none" }}>📏 Length</button>
+        </div>
+
+        {/* Converter card */}
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:20, padding:"24px 20px", marginBottom:16 }}>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:8 }}>Value to convert</div>
+          
+          <input 
+            type="number" 
+            value={value} 
+            onChange={(e)=>setValue(Number(e.target.value))} 
+            style={{ width:"100%", background:T.bg, border:`1px solid ${T.border}`, borderRadius:14, padding:"16px 18px", fontSize:18, fontWeight:600, fontFamily:"'DM Mono',monospace", color:T.text, marginBottom:12, boxSizing:"border-box" }} 
+          />
+          
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:T.bg, border:`1px solid ${T.border}`, borderRadius:14, padding:"16px 18px", marginBottom:12 }}>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:14, fontWeight:600, color:T.sandy }}>{from}</span>
+            <button onClick={toggleDirection} style={{ width:44, height:44, borderRadius:"50%", background:T.bg, border:`1px solid ${T.border}`, fontSize:20, color:T.sandy, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:T.font }}>⇄</button>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:14, fontWeight:600, color:T.sandy }}>{to}</span>
+          </div>
+
+          <div style={{ background:T.bg, border:`1px solid rgba(248,161,99,0.3)`, borderRadius:14, padding:"16px 18px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:28, fontWeight:700, color:T.sandy, letterSpacing:"-1px" }}>{result}</span>
+            <span style={{ fontSize:14, fontWeight:600, color:T.taupe }}>{to}</span>
+          </div>
+        </div>
+
+        {/* Reference table */}
+        <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:10 }}>Conversion table</div>
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:16, overflow:"hidden" }}>
+          <div style={{ background:T.graphite, padding:"9px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.1em", color:T.taupe, textTransform:"uppercase" }}>{mode==="weight"?"kg":"meters"}</span>
+            <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.1em", color:T.taupe, textTransform:"uppercase" }}>{mode==="weight"?"lb":"feet"}</span>
+          </div>
+          {refTable.map((row,i) => (
+            <div key={i} style={{ display:"flex", alignItems:"center", padding:"11px 16px", borderBottom:i<refTable.length-1?`1px solid ${T.border}`:"none", fontSize:13 }}>
+              <span style={{ fontWeight:600, color:T.text, flex:1, fontFamily:"'DM Mono',monospace" }}>{row.from}</span>
+              <span style={{ fontSize:13, color:T.sandy, margin:"0 12px", opacity:0.6 }}>→</span>
+              <span style={{ fontWeight:600, color:T.sandy, flex:1, fontFamily:"'DM Mono',monospace", textAlign:"right" }}>{row.to}</span>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );
@@ -2151,6 +2260,7 @@ function App() {
       {screen==="create" && <CreateTraining onBack={()=>setScreen("home")} />}
       {screen==="search" && <SearchTraining onBack={()=>setScreen("home")} />}
       {screen==="timer"  && <TimerTraining onBack={()=>setScreen("home")} />}
+      {screen==="converter" && <UnitConverter onBack={()=>setScreen("home")} />}
       {screen==="add"    && <AddTraining onBack={()=>setScreen("home")} />}
     </>
   );
