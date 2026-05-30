@@ -2471,12 +2471,12 @@ function Toggle({ on, onClick }) {
 function OpenGamesYears({onNav, onBack}) {
   const years = Array.from({length: 16}, (_, i) => 2011 + i); // 2011-2026
   return (
-    <div style={{padding: '20px', background: T.bg, minHeight: '100vh'}}>
+    <div style={{padding: '20px', background: T.bg, minHeight: '100vh', fontFamily: T.font}}>
       <div style={{marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px'}}>
         <button onClick={onBack} style={{padding: '8px 12px', fontSize: '16px', border: 'none', background: 'transparent', cursor: 'pointer', color: T.text}}>✕</button>
         <div style={{flex: 1}}>
-          <h2 style={{margin: 0, color: T.text, fontSize: '22px', fontWeight: '300'}}>OPEN GAMES</h2>
-          <p style={{margin: '4px 0 0 0', color: T.muted, fontSize: '13px'}}>Selecciona un año</p>
+          <h2 style={{margin: 0, color: T.text, fontSize: '24px', fontWeight: '300', letterSpacing: '-0.5px'}}>OPEN GAMES</h2>
+          <p style={{margin: '4px 0 0 0', color: T.muted, fontSize: '12px', fontWeight: '300'}}>Selecciona un año</p>
         </div>
       </div>
       
@@ -2493,13 +2493,15 @@ function OpenGamesYears({onNav, onBack}) {
                 border: `1px solid ${T.border}`,
                 borderRadius: '8px',
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                fontFamily: T.font,
+                textAlign: 'left'
               }}
               onMouseEnter={(e) => e.target.style.background = T.surface}
               onMouseLeave={(e) => e.target.style.background = T.surface2}
             >
-              <div style={{fontSize: '18px', fontWeight: '500', color: T.text, marginBottom: '4px'}}>{year}</div>
-              <div style={{fontSize: '12px', color: T.muted}}>{wods.length} WODs</div>
+              <div style={{fontSize: '18px', fontWeight: '300', color: T.text, marginBottom: '4px'}}>{year}</div>
+              <div style={{fontSize: '12px', color: T.muted, fontWeight: '300'}}>{wods.length} WODs</div>
             </button>
           );
         })}
@@ -2512,49 +2514,96 @@ function OpenGamesYear({year, onNav, onBack}) {
   const wods = WORKOUTS.filter(w => w.tags && w.tags.includes(String(year)) && w.tags.includes('open games')).sort((a,b) => a.id - b.id);
   const [expandedId, setExpandedId] = useState(null);
   
+  // Parse WOD details for formatting
+  const parseWodDescription = (ejercicios) => {
+    if (!ejercicios || ejercicios.length === 0) return null;
+    
+    let wodType = '';
+    let exercises = [];
+    let weights = [];
+    
+    ejercicios.forEach(line => {
+      const upper = line.toUpperCase();
+      if (upper.includes('AMRAP') || upper.includes('FOR TIME') || upper.includes('FOR LOAD') || upper.includes('1RM') || upper.includes('CADA')) {
+        wodType = line;
+      } else if (line.includes('Rx:') || line.includes('kg') || line.includes('lb')) {
+        weights.push(line);
+      } else if (line.trim() && !line.includes('(')) {
+        exercises.push(line);
+      }
+    });
+    
+    return { wodType, exercises, weights };
+  };
+  
   return (
-    <div style={{padding: '20px', background: T.bg, minHeight: '100vh'}}>
+    <div style={{padding: '20px', background: T.bg, minHeight: '100vh', fontFamily: T.font}}>
       <div style={{marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px'}}>
         <button onClick={onBack} style={{padding: '8px 12px', fontSize: '16px', border: 'none', background: 'transparent', cursor: 'pointer', color: T.text}}>✕</button>
         <div style={{flex: 1}}>
-          <h2 style={{margin: 0, color: T.text, fontSize: '22px', fontWeight: '300'}}>Open Games {year}</h2>
-          <p style={{margin: '4px 0 0 0', color: T.muted, fontSize: '13px'}}>{wods.length} WODs</p>
+          <h2 style={{margin: 0, color: T.text, fontSize: '24px', fontWeight: '300', letterSpacing: '-0.5px'}}>Open Games {year}</h2>
+          <p style={{margin: '4px 0 0 0', color: T.muted, fontSize: '12px', fontWeight: '300'}}>{wods.length} WODs</p>
         </div>
       </div>
       
       <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-        {wods.map(wod => (
-          <div key={wod.id} style={{background: T.surface, border: `1px solid ${T.border}`, borderRadius: '6px', overflow: 'hidden'}}>
-            <button
-              onClick={() => setExpandedId(expandedId === wod.id ? null : wod.id)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                background: 'transparent',
-                border: 'none',
-                textAlign: 'left',
-                cursor: 'pointer',
-                display: 'flex',
-                justifyItems: 'center',
-                justifyContent: 'space-between'
-              }}
-            >
-              <div>
-                <div style={{fontWeight: '500', color: T.text}}>{wod.label}</div>
-                <div style={{fontSize: '12px', color: T.muted, marginTop: '2px'}}>{wod.tags ? wod.tags.filter(t => t.includes('.'))[0] : ''}</div>
-              </div>
-              <div style={{color: T.sandy, fontSize: '14px'}}>{expandedId === wod.id ? '▼' : '▶'}</div>
-            </button>
-            
-            {expandedId === wod.id && (
-              <div style={{padding: '0 12px 12px 12px', borderTop: `1px solid ${T.border2}`, background: T.bg}}>
-                <div style={{fontSize: '13px', color: T.text, lineHeight: '1.6', whiteSpace: 'pre-wrap', fontFamily: 'monospace'}}>
-                  {wod.ejercicios.join('\n')}
+        {wods.map(wod => {
+          const parsed = parseWodDescription(wod.ejercicios);
+          const wodNumber = wod.tags ? wod.tags.find(t => t.includes('.')) : '';
+          
+          return (
+            <div key={wod.id} style={{background: T.surface, border: `1px solid ${T.border}`, borderRadius: '6px', overflow: 'hidden'}}>
+              <button
+                onClick={() => setExpandedId(expandedId === wod.id ? null : wod.id)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: 'transparent',
+                  border: 'none',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontFamily: T.font
+                }}
+              >
+                <div>
+                  <div style={{fontWeight: '400', color: T.text, fontSize: '16px'}}>{wodNumber}</div>
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
+                <div style={{color: T.sandy, fontSize: '14px', fontWeight: '300'}}>{expandedId === wod.id ? '▼' : '▶'}</div>
+              </button>
+              
+              {expandedId === wod.id && parsed && (
+                <div style={{padding: '12px', borderTop: `1px solid ${T.border2}`, background: T.bg}}>
+                  {parsed.wodType && (
+                    <div style={{fontSize: '12px', color: T.sandy, fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>
+                      {parsed.wodType}
+                    </div>
+                  )}
+                  
+                  <div style={{fontSize: '13px', color: T.text, lineHeight: '1.7', marginBottom: parsed.weights.length > 0 ? '8px' : '0'}}>
+                    {parsed.exercises.map((ex, i) => (
+                      <div key={i} style={{marginBottom: '4px', color: T.text}}>
+                        {ex}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {parsed.weights.length > 0 && (
+                    <div style={{fontSize: '11px', color: T.muted, paddingTop: '8px', borderTop: `1px solid ${T.border2}`, marginTop: '8px'}}>
+                      {parsed.weights.map((w, i) => (
+                        <div key={i} style={{marginTop: i > 0 ? '4px' : '0'}}>
+                          {w}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
