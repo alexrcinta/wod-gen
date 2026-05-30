@@ -1976,6 +1976,7 @@ function TimerTraining({ onBack }) {
 
   // Active state
   const [running, setRunning] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [inCountdown, setInCountdown] = useState(false);
   const [cdLeft, setCdLeft] = useState(0);
   const [elapsed, setElapsed] = useState(0); // for updown asc / interval tracking
@@ -2004,6 +2005,10 @@ function TimerTraining({ onBack }) {
     }
   }, [phase]);
 
+  const togglePause = () => {
+    setPaused(p => !p);
+  };
+
   const startTimer = () => {
     if (soundOn) {
       try { if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
@@ -2012,8 +2017,7 @@ function TimerTraining({ onBack }) {
     if (countdownOn) {
       setInCountdown(true);
       setCdLeft(countdownSec);
-      // Schedule 3 beeps for last 3 seconds of countdown
-      if (soundOn && countdownSec >= 3) beepCountdown3();
+      // NO beeps at countdown start — only beeps on last 3 seconds
     } else {
       beginWorkoutState();
     }
@@ -2032,6 +2036,7 @@ function TimerTraining({ onBack }) {
 
   const exitTimer = () => {
     setRunning(false);
+    setPaused(false);
     setInCountdown(false);
     setPhase("config");
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -2039,7 +2044,7 @@ function TimerTraining({ onBack }) {
 
   // Main tick
   React.useEffect(() => {
-    if (!running || phase !== "active") return;
+    if (!running || phase !== "active" || paused) return;
     intervalRef.current = setInterval(() => {
 
       // ── COUNTDOWN ──
@@ -2096,18 +2101,25 @@ function TimerTraining({ onBack }) {
 
     }, 1000);
     return () => clearInterval(intervalRef.current);
-  }, [running, phase, inCountdown, mode, direction, curInterval, curRound, intervals, rounds, updownSec, soundOn]);
+  }, [running, phase, paused, inCountdown, mode, direction, curInterval, curRound, intervals, rounds, updownSec, soundOn]);
 
   // ─── ACTIVE SCREEN ───
   if (phase === "active") {
     const globalRound = mode === "interval" ? ((curRound-1)*intervals.length + curInterval + 1) : 0;
     const globalTotal = mode === "interval" ? (rounds * intervals.length) : 0;
     return (
-      <div style={{ position:"fixed", inset:0, background:T.graphite, zIndex:9999, display:"flex", flexDirection:"column" }}>
+      <div onClick={togglePause} style={{ position:"fixed", inset:0, background:T.graphite, zIndex:9999, display:"flex", flexDirection:"column", cursor:"pointer" }}>
         <div style={{ height:3, background:T.sandy, flexShrink:0 }} />
         <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
           {/* Exit */}
-          <button onClick={exitTimer} style={{ position:"absolute", top:18, left:20, width:38, height:38, borderRadius:"50%", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.4)", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10 }}>✕</button>
+          <button onClick={(e)=>{e.stopPropagation();exitTimer();}} style={{ position:"absolute", top:18, left:20, width:38, height:38, borderRadius:"50%", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.4)", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10 }}>✕</button>
+
+          {/* Pause indicator */}
+          {paused && (
+            <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%, -50%)", background:"rgba(0,0,0,0.6)", padding:"20px 32px", borderRadius:16, zIndex:5 }}>
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:20, fontWeight:700, color:"#FFFAFA", letterSpacing:"-0.5px", textAlign:"center" }}>PAUSED</div>
+            </div>
+          )}
 
           {inCountdown ? (
             // Countdown: muted taupe color, not sandy
