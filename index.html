@@ -1952,7 +1952,7 @@ function UnitConverter({ onBack }) {
     }
   };
 
-  // Handle input - allow numbers, comma and dot for decimals, max 2 decimals
+  // Handle input - accept both comma and dot for decimals
   const handleValueChange = (e) => {
     let inputValue = e.target.value;
     
@@ -1962,48 +1962,24 @@ function UnitConverter({ onBack }) {
       return;
     }
     
-    // First pass: allow EVERYTHING to come through
-    // Keep only digits, commas, and dots
-    let filtered = '';
-    for (let i = 0; i < inputValue.length; i++) {
-      const char = inputValue[i];
-      if (/[0-9,.]/.test(char)) {
-        filtered += char;
-      }
-    }
-    inputValue = filtered;
-    
-    if (inputValue === '') {
-      setValue('0');
-      return;
-    }
-    
-    // Remove leading zeros but keep at least one digit (e.g., "005" -> "5", "0.5" -> "0.5")
-    inputValue = inputValue.replace(/^0+(?=[1-9])/, '');
-    
-    // Now normalize: replace commas with dots for internal consistency
+    // Replace comma with dot immediately for consistency
     inputValue = inputValue.replace(/,/g, '.');
     
-    // Ensure only one decimal point by keeping first occurrence
-    const firstDotIndex = inputValue.indexOf('.');
-    if (firstDotIndex !== -1) {
-      const beforeDot = inputValue.substring(0, firstDotIndex);
-      const afterDot = inputValue.substring(firstDotIndex + 1).replace(/\./g, '');
-      inputValue = beforeDot + '.' + afterDot;
+    // Remove leading zeros but keep at least one digit
+    inputValue = inputValue.replace(/^0+(?=[1-9])/, '');
+    
+    // Ensure only one decimal point
+    const parts = inputValue.split('.');
+    if (parts.length > 2) {
+      inputValue = parts[0] + '.' + parts.slice(1).join('');
     }
     
     // Limit to 2 decimal places
-    const parts = inputValue.split('.');
     if (parts[1]) {
       inputValue = parts[0] + '.' + parts[1].substring(0, 2);
     }
     
-    // Final validation
-    if (inputValue === '' || inputValue === '.' || inputValue === '0.') {
-      setValue('0');
-    } else {
-      setValue(inputValue);
-    }
+    setValue(inputValue === '' || inputValue === '.' ? '0' : inputValue);
   };
 
   // Generate reference table
@@ -2041,8 +2017,10 @@ function UnitConverter({ onBack }) {
           <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:8 }}>Value to convert</div>
           
           <input 
-            type="tel"
+            type="number" 
+            inputMode="decimal"
             placeholder="0"
+            step="0.01"
             value={value} 
             onChange={handleValueChange}
             style={{ width:"100%", background:T.bg, border:`1px solid ${T.border}`, borderRadius:14, padding:"16px 18px", fontSize:18, fontWeight:600, fontFamily:"'DM Mono',monospace", color:T.text, marginBottom:12, boxSizing:"border-box" }} 
