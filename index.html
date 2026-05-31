@@ -1952,15 +1952,18 @@ function UnitConverter({ onBack }) {
     }
   };
 
-  // Handle input - allow only numbers and up to 2 decimals
+  // Handle input - allow numbers, comma and dot for decimals, max 2 decimals
   const handleValueChange = (e) => {
     let inputValue = e.target.value;
     
     // Remove leading zeros but keep the number (e.g., "005" -> "5")
     inputValue = inputValue.replace(/^0+(?=\d)/, '');
     
-    // Keep only numbers and one decimal point
-    inputValue = inputValue.replace(/[^0-9.]/g, '');
+    // Keep only numbers, comma and dot (for decimals)
+    inputValue = inputValue.replace(/[^0-9.,]/g, '');
+    
+    // Replace comma with dot for decimal consistency
+    inputValue = inputValue.replace(',', '.');
     
     // Ensure only one decimal point
     const parts = inputValue.split('.');
