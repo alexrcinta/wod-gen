@@ -1602,9 +1602,9 @@ function Home({ onNav }) {
 
       {/* Buttons */}
       <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:"center", padding:"0 24px", gap:12 }}>
-        <HomeBtn icon="■" label="Training" sub="Create · Search · Add" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("training")} />
-        <HomeBtn icon="◐" label="Timer" sub="UP/DOWN · Intervalos" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("timer")} />
-        <HomeBtn icon="⇄" label="Unit Converter" sub="kg · lb · m · ft" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("converter")} />
+        <HomeBtn icon="■" label="TRAINING" sub="Create · Search · Add" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("training")} />
+        <HomeBtn icon="◐" label="TIMER" sub="UP/DOWN · Intervalos" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("timer")} />
+        <HomeBtn icon="⇄" label="UNIT CONVERTER" sub="kg · lb · m · ft" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("converter")} />
       </div>
 
       {/* Bottom safe area */}
@@ -1617,23 +1617,23 @@ function Home({ onNav }) {
 function TrainingMenu({ onNav, onBack }) {
   return (
     <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
-      <PageHeader title="Training" onBack={onBack} />
+      <PageHeader title="TRAINING" onBack={onBack} />
       <div style={{ padding:"20px 20px 40px" }}>
         <button onClick={()=>onNav("create")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.snow, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", marginBottom:10, fontFamily:T.font }}>
           <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>✦</div>
-          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>Create Training</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Genera tu sesión completa</div></div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>CREATE</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Genera tu sesión completa</div></div>
           <div style={{ fontSize:16, opacity:0.35, color:T.muted }}>›</div>
         </button>
 
         <button onClick={()=>onNav("search-menu")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.snow, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", marginBottom:10, fontFamily:T.font }}>
           <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>◈</div>
-          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>Search</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Base de datos · Oficiales</div></div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>SEARCH</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Base de datos · Oficiales</div></div>
           <div style={{ fontSize:16, opacity:0.35, color:T.muted }}>›</div>
         </button>
 
         <button onClick={()=>onNav("add")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.snow, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", fontFamily:T.font }}>
           <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>＋</div>
-          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>Add Training</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Tus entrenamientos personalizados</div></div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>ADD</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Tus entrenamientos personalizados</div></div>
           <div style={{ fontSize:16, opacity:0.35, color:T.muted }}>›</div>
         </button>
       </div>
@@ -1645,17 +1645,17 @@ function TrainingMenu({ onNav, onBack }) {
 function SearchMenu({ onNav, onBack }) {
   return (
     <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
-      <PageHeader title="Search" onBack={onBack} />
+      <PageHeader title="SEARCH" onBack={onBack} />
       <div style={{ padding:"20px 20px 40px" }}>
         <button onClick={()=>onNav("search")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.snow, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", marginBottom:10, fontFamily:T.font }}>
           <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>◊</div>
-          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>Database</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>507 entrenamientos disponibles</div></div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>DATABASE</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>507 entrenamientos disponibles</div></div>
           <div style={{ fontSize:16, opacity:0.35, color:T.muted }}>›</div>
         </button>
 
         <button onClick={()=>onNav("officials-menu")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.snow, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", fontFamily:T.font }}>
           <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>◆</div>
-          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>Officials</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Open Games · Competitions</div></div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>OFFICIAL</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Open Games · Competitions</div></div>
           <div style={{ fontSize:16, opacity:0.35, color:T.muted }}>›</div>
         </button>
       </div>
@@ -1667,7 +1667,7 @@ function SearchMenu({ onNav, onBack }) {
 function OfficialsMenu({ onNav, onBack }) {
   return (
     <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
-      <PageHeader title="Officials" onBack={onBack} />
+      <PageHeader title="OFFICIAL" onBack={onBack} />
       <div style={{ padding:"20px 20px 40px" }}>
         <button onClick={() => onNav('openGames-years')} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.surface2, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", transition:"all 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = T.surface} onMouseLeave={(e) => e.currentTarget.style.background = T.surface2}>
           <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>⬡</div>
@@ -1749,7 +1749,7 @@ function CreateTraining({ onBack }) {
 
   return (
     <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
-      <PageHeader title="Create Training" sub="Genera tu sesión" onBack={onBack} />
+      <PageHeader title="CREATE" sub="Genera tu sesión" onBack={onBack} />
       <div style={{ padding:"24px 20px 60px" }}>
         {step==="config" && (
           <>
@@ -1816,7 +1816,7 @@ function SearchTraining({ onBack }) {
   const QUICK=["snatch","clean","jerk","squat","deadlift","hspu","ring mu","t2bar","c2bar","row","bike","run","rope","du","thruster","wall ball","emom","amrap","rft"];
   return (
     <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
-      <PageHeader title="Search Training" sub={`${searchable.length} bloques`} onBack={onBack} />
+      <PageHeader title="SEARCH" sub={`${searchable.length} bloques`} onBack={onBack} />
       <div style={{ padding:"20px 20px 60px" }}>
         <div style={{ display:"flex", gap:8, marginBottom:14 }}>
           <AppInput value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>e.key==="Enter"&&search()} placeholder="snatch, ring mu, emom..." autoFocus />
@@ -1868,7 +1868,7 @@ function AddTraining({ onBack }) {
   const handleCopy=()=>{ navigator.clipboard.writeText(exportText).then(()=>{ setCopied(true); setTimeout(()=>setCopied(false),2000); }); };
   return (
     <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
-      <PageHeader title="Add Training" sub="Añade tus entrenamientos" onBack={onBack} />
+      <PageHeader title="ADD" sub="Añade tus entrenamientos" onBack={onBack} />
       <div style={{ padding:"0 20px 60px" }}>
         <div style={{ display:"flex", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}>
           {[["add","➕ Nuevo"],["mine",`📋 Mis entradas${custom.length>0?` (${custom.length})`:""}`]].map(([key,lbl])=>(
@@ -1919,15 +1919,17 @@ function AddTraining({ onBack }) {
 // ─── UNIT CONVERTER ───────────────────────────────────────────────────────────
 function UnitConverter({ onBack }) {
   const [mode, setMode] = useState("weight"); // weight | length
-  const [value, setValue] = useState(100);
+  const [value, setValue] = useState("100");
   const [direction, setDirection] = useState("kg-to-lb"); // kg-to-lb | lb-to-kg | m-to-ft | ft-to-m
 
   const convert = (val, from, to) => {
-    if (from === "kg" && to === "lb") return (val * 2.20462).toFixed(2);
-    if (from === "lb" && to === "kg") return (val / 2.20462).toFixed(2);
-    if (from === "m" && to === "ft") return (val * 3.28084).toFixed(2);
-    if (from === "ft" && to === "m") return (val / 3.28084).toFixed(2);
-    return 0;
+    const numVal = parseFloat(val);
+    if (isNaN(numVal)) return "0.00";
+    if (from === "kg" && to === "lb") return (numVal * 2.20462).toFixed(2);
+    if (from === "lb" && to === "kg") return (numVal / 2.20462).toFixed(2);
+    if (from === "m" && to === "ft") return (numVal * 3.28084).toFixed(2);
+    if (from === "ft" && to === "m") return (numVal / 3.28084).toFixed(2);
+    return "0.00";
   };
 
   const getConvertData = () => {
@@ -1948,6 +1950,30 @@ function UnitConverter({ onBack }) {
     } else {
       setDirection(direction === "m-to-ft" ? "ft-to-m" : "m-to-ft");
     }
+  };
+
+  // Handle input - allow only numbers and up to 2 decimals
+  const handleValueChange = (e) => {
+    let inputValue = e.target.value;
+    
+    // Remove leading zeros but keep the number (e.g., "005" -> "5")
+    inputValue = inputValue.replace(/^0+(?=\d)/, '');
+    
+    // Keep only numbers and one decimal point
+    inputValue = inputValue.replace(/[^0-9.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = inputValue.split('.');
+    if (parts.length > 2) {
+      inputValue = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    // Limit to 2 decimal places
+    if (parts[1] && parts[1].length > 2) {
+      inputValue = parts[0] + '.' + parts[1].substring(0, 2);
+    }
+    
+    setValue(inputValue === '' ? '0' : inputValue);
   };
 
   // Generate reference table
@@ -1971,7 +1997,7 @@ function UnitConverter({ onBack }) {
 
   return (
     <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
-      <PageHeader title="Unit Converter" onBack={onBack} />
+      <PageHeader title="UNIT CONVERTER" onBack={onBack} />
       <div style={{ padding:"20px 20px 40px" }}>
 
         {/* Tabs */}
@@ -1985,9 +2011,10 @@ function UnitConverter({ onBack }) {
           <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:8 }}>Value to convert</div>
           
           <input 
-            type="number" 
+            type="text" 
+            inputMode="decimal"
             value={value} 
-            onChange={(e)=>setValue(Number(e.target.value))} 
+            onChange={handleValueChange}
             style={{ width:"100%", background:T.bg, border:`1px solid ${T.border}`, borderRadius:14, padding:"16px 18px", fontSize:18, fontWeight:600, fontFamily:"'DM Mono',monospace", color:T.text, marginBottom:12, boxSizing:"border-box" }} 
           />
           
@@ -2442,24 +2469,35 @@ function Toggle({ on, onClick }) {
 function OpenGamesYears({onNav, onBack}) {
   const years = Array.from({length: 16}, (_, i) => 2011 + i);
   return (
-    <div style={{padding: '20px', background: T.bg, minHeight: '100vh', fontFamily: T.font}}>
-      <div style={{marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px'}}>
-        <button onClick={onBack} style={{padding: '8px 12px', fontSize: '16px', border: 'none', background: 'transparent', cursor: 'pointer', color: T.text}}>✕</button>
-        <div style={{flex: 1}}>
-          <h2 style={{margin: 0, color: T.text, fontSize: '24px', fontWeight: '300', letterSpacing: '-0.5px'}}>OPEN GAMES</h2>
-          <p style={{margin: '4px 0 0 0', color: T.muted, fontSize: '12px', fontWeight: '300'}}>Selecciona un año</p>
+    <div style={{minHeight:"100vh", background:T.bg, fontFamily:T.font}}>
+      <PageHeader title="OPEN GAMES" onBack={onBack} />
+      <div style={{padding:"20px 20px 40px"}}>
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px'}}>
+          {years.map(year => {
+            const wods = WORKOUTS.filter(w => w.tags && w.tags.includes(String(year)) && w.tags.includes('open games'));
+            return (
+              <button
+                key={year}
+                onClick={() => onNav(`openGames-year-${year}`)}
+                style={{
+                  padding: '16px',
+                  background: T.surface2,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontFamily: T.font,
+                  textAlign: 'left'
+                }}
+                onMouseEnter={(e) => e.target.style.background = T.surface}
+                onMouseLeave={(e) => e.target.style.background = T.surface2}
+              >
+                <div style={{fontSize: '18px', fontWeight: '300', color: T.text, marginBottom: '4px'}}>{year}</div>
+                <div style={{fontSize: '12px', color: T.muted, fontWeight: '300'}}>{wods.length} WODs</div>
+              </button>
+            );
+          })}
         </div>
-      </div>
-      <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px'}}>
-        {years.map(year => {
-          const wods = WORKOUTS.filter(w => w.tags && w.tags.includes(String(year)) && w.tags.includes('open games'));
-          return (
-            <button key={year} onClick={() => onNav(`openGames-year-${year}`)} style={{padding: '16px', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', fontFamily: T.font, textAlign: 'left'}} onMouseEnter={(e) => e.target.style.background = T.surface} onMouseLeave={(e) => e.target.style.background = T.surface2}>
-              <div style={{fontSize: '18px', fontWeight: '300', color: T.text, marginBottom: '4px'}}>{year}</div>
-              <div style={{fontSize: '12px', color: T.muted, fontWeight: '300'}}>{wods.length} WODs</div>
-            </button>
-          );
-        })}
       </div>
     </div>
   );
@@ -2492,70 +2530,66 @@ function OpenGamesYear({year, onNav, onBack}) {
   };
   
   return (
-    <div style={{padding: '20px', background: T.bg, minHeight: '100vh', fontFamily: T.font}}>
-      <div style={{marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px'}}>
-        <button onClick={onBack} style={{padding: '8px 12px', fontSize: '16px', border: 'none', background: 'transparent', cursor: 'pointer', color: T.text}}>✕</button>
-        <div style={{flex: 1}}>
-          <h2 style={{margin: 0, color: T.text, fontSize: '24px', fontWeight: '300', letterSpacing: '-0.5px'}}>Open Games {year}</h2>
-          <p style={{margin: '4px 0 0 0', color: T.muted, fontSize: '12px', fontWeight: '300'}}>{wods.length} WODs</p>
-        </div>
-      </div>
-      <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-        {wods.map(wod => {
-          const parsed = parseWodDescription(wod.ejercicios);
-          const wodNumber = wod.tags ? wod.tags.find(t => t.includes('.')) : '';
-          
-          return (
-            <div key={wod.id} style={{background: T.surface, border: `1px solid ${T.border}`, borderRadius: '6px', overflow: 'hidden'}}>
-              <button
-                onClick={() => setExpandedId(expandedId === wod.id ? null : wod.id)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  background: 'transparent',
-                  border: 'none',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  fontFamily: T.font
-                }}
-              >
-                <div style={{fontWeight: '400', color: T.text, fontSize: '16px'}}>{wodNumber}</div>
-                <div style={{color: T.sandy, fontSize: '14px', fontWeight: '300'}}>{expandedId === wod.id ? '▼' : '▶'}</div>
-              </button>
-              
-              {expandedId === wod.id && parsed && (
-                <div style={{padding: '12px', borderTop: `1px solid ${T.border2}`, background: T.bg}}>
-                  {parsed.wodType && (
-                    <div style={{fontSize: '12px', color: T.sandy, fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>
-                      {parsed.wodType}
-                    </div>
-                  )}
-                  
-                  <div style={{fontSize: '13px', color: T.text, lineHeight: '1.7', marginBottom: parsed.weights.length > 0 ? '8px' : '0'}}>
-                    {parsed.exercises.map((ex, i) => (
-                      <div key={i} style={{marginBottom: '4px', color: T.text}}>
-                        {ex}
+    <div style={{minHeight:"100vh", background:T.bg, fontFamily:T.font}}>
+      <PageHeader title={`${year}`} onBack={onBack} />
+      <div style={{padding:"20px 20px 40px"}}>
+        <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+          {wods.map(wod => {
+            const parsed = parseWodDescription(wod.ejercicios);
+            const wodNumber = wod.tags ? wod.tags.find(t => t.includes('.')) : '';
+            
+            return (
+              <div key={wod.id} style={{background: T.surface, border: `1px solid ${T.border}`, borderRadius: '6px', overflow: 'hidden'}}>
+                <button
+                  onClick={() => setExpandedId(expandedId === wod.id ? null : wod.id)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontFamily: T.font
+                  }}
+                >
+                  <div style={{fontWeight: '400', color: T.text, fontSize: '16px'}}>{wodNumber}</div>
+                  <div style={{color: T.sandy, fontSize: '14px', fontWeight: '300'}}>{expandedId === wod.id ? '▼' : '▶'}</div>
+                </button>
+                
+                {expandedId === wod.id && parsed && (
+                  <div style={{padding: '12px', borderTop: `1px solid ${T.border2}`, background: T.bg}}>
+                    {parsed.wodType && (
+                      <div style={{fontSize: '12px', color: T.sandy, fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>
+                        {parsed.wodType}
                       </div>
-                    ))}
-                  </div>
-                  
-                  {parsed.weights.length > 0 && (
-                    <div style={{fontSize: '11px', color: T.muted, paddingTop: '8px', borderTop: `1px solid ${T.border2}`, marginTop: '8px'}}>
-                      {parsed.weights.map((w, i) => (
-                        <div key={i} style={{marginTop: i > 0 ? '4px' : '0'}}>
-                          {w}
+                    )}
+                    
+                    <div style={{fontSize: '13px', color: T.text, lineHeight: '1.7', marginBottom: parsed.weights.length > 0 ? '8px' : '0'}}>
+                      {parsed.exercises.map((ex, i) => (
+                        <div key={i} style={{marginBottom: '4px', color: T.text}}>
+                          {ex}
                         </div>
                       ))}
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                    
+                    {parsed.weights.length > 0 && (
+                      <div style={{fontSize: '11px', color: T.muted, paddingTop: '8px', borderTop: `1px solid ${T.border2}`, marginTop: '8px'}}>
+                        {parsed.weights.map((w, i) => (
+                          <div key={i} style={{marginTop: i > 0 ? '4px' : '0'}}>
+                            {w}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
