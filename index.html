@@ -1805,6 +1805,7 @@ function SearchTraining({ onBack }) {
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
   const [activeCats, setActiveCats] = useState(["STRENGTH","WOD","TEAMWOD","ENDURANCE"]);
+  const [typeModalOpen, setTypeModalOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const searchable = useMemo(()=>WORKOUTS.filter(w=>w.cat!=="WARMUP"),[]);
   const toggleCat = (cat) => { setActiveCats(prev=>prev.includes(cat)?prev.length>1?prev.filter(c=>c!==cat):prev:[...prev,cat]); setIndex(0); };
@@ -1814,38 +1815,196 @@ function SearchTraining({ onBack }) {
   },[submitted,activeCats,searchable]);
   const current=results[index]||null;
   const search=()=>{ setSubmitted(query); setIndex(0); };
-  const QUICK=["snatch","clean","jerk","squat","deadlift","hspu","ring mu","t2bar","c2bar","row","bike","run","rope","du","thruster","wall ball","emom","amrap","rft"];
+  
+  // Get active type label
+  const getTypeLabel = () => {
+    if(activeCats.length === 4) return "All";
+    if(activeCats.length === 1) {
+      const catMeta = CAT_META[activeCats[0]];
+      return catMeta ? catMeta.label : "All";
+    }
+    return `${activeCats.length} Selected`;
+  };
+  
+  const handleSelectCat = (cat) => {
+    setActiveCats([cat]);
+    setIndex(0);
+    setTypeModalOpen(false);
+  };
+  
+  const handleSelectAll = () => {
+    setActiveCats(["STRENGTH","WOD","TEAMWOD","ENDURANCE"]);
+    setIndex(0);
+    setTypeModalOpen(false);
+  };
+  
   return (
     <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
-      <PageHeader title="SEARCH" sub={`${searchable.length} bloques`} onBack={onBack} />
+      <PageHeader title="SEARCH" sub={`${searchable.length} entrenamientos disponibles`} onBack={onBack} />
       <div style={{ padding:"20px 20px 60px" }}>
+        {/* Search Input */}
         <div style={{ display:"flex", gap:8, marginBottom:14 }}>
-          <AppInput value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>e.key==="Enter"&&search()} placeholder="snatch, ring mu, emom..." autoFocus />
+          <AppInput value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>e.key==="Enter"&&search()} placeholder="Busca por nombre..." autoFocus />
           <button onClick={search} style={{ background:T.graphite, border:"none", borderRadius:14, color:T.bg, fontSize:18, fontWeight:600, padding:"0 18px", cursor:"pointer", fontFamily:T.font, flexShrink:0 }}>›</button>
         </div>
-        <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:16 }}>
-          {QUICK.map(t=><button key={t} onClick={()=>{ setQuery(t); setSubmitted(t); setIndex(0); }} style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:20, fontSize:11, fontWeight:500, color:T.muted, padding:"5px 12px", cursor:"pointer", fontFamily:T.font }}>{t}</button>)}
+        
+        {/* Type Dropdown */}
+        <div style={{ marginBottom:20 }}>
+          <button 
+            onClick={() => setTypeModalOpen(!typeModalOpen)}
+            style={{ 
+              width:"100%", 
+              padding:"12px 14px", 
+              border:`1px solid ${T.border}`, 
+              borderRadius:10, 
+              background:T.surface, 
+              fontSize:13, 
+              fontWeight:500, 
+              color:T.text, 
+              cursor:"pointer", 
+              fontFamily:T.font, 
+              display:"flex", 
+              alignItems:"center", 
+              justifyContent:"space-between",
+              boxSizing:"border-box"
+            }}
+          >
+            <span>📋 Type: {getTypeLabel()}</span>
+            <span style={{color:T.muted}}>‣</span>
+          </button>
         </div>
-        <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:20, paddingBottom:20, borderBottom:`1px solid ${T.border}` }}>
-          {["STRENGTH","WOD","TEAMWOD","ENDURANCE"].map(cat=>{ const m=CAT_META[cat]; const active=activeCats.includes(cat);
-            return <button key={cat} onClick={()=>toggleCat(cat)} style={{ padding:"7px 14px", borderRadius:20, fontSize:11, fontWeight:500, border:`1px solid ${active?m.color:T.border}`, background:active?m.bg:T.surface, color:active?m.color:T.muted, cursor:"pointer", fontFamily:T.font }}>{m.icon} {m.label}</button>;
-          })}
-        </div>
-        {submitted && <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-          <span style={{ fontSize:13, color:T.muted }}><b style={{ color:T.text }}>{results.length}</b> resultado{results.length!==1?"s":""}<span style={{ color:T.sandy }}> · "{submitted}"</span></span>
-          {results.length>1 && <span style={{ fontSize:11, color:T.muted }}>{index+1}/{results.length}</span>}
-        </div>}
-        {current && (<>
-          <WorkoutCard workout={current} keyword={submitted} />
-          <ShareBlock text={buildShareTextSingle(current)} />
-          {results.length>1 && <div style={{ display:"flex", gap:8, marginTop:12 }}>
-            <button style={{ flex:1, padding:"12px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, fontSize:13, fontWeight:500, color:index===0?T.border2:T.muted, cursor:index===0?"default":"pointer", fontFamily:T.font }} onClick={()=>setIndex(i=>Math.max(0,i-1))} disabled={index===0}>← Anterior</button>
-            <span style={{ display:"flex", alignItems:"center", fontSize:11, color:T.muted, padding:"0 8px" }}>{index+1}/{results.length}</span>
-            <button style={{ flex:1, padding:"12px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, fontSize:13, fontWeight:500, color:index===results.length-1?T.border2:T.muted, cursor:index===results.length-1?"default":"pointer", fontFamily:T.font }} onClick={()=>setIndex(i=>Math.min(results.length-1,i+1))} disabled={index===results.length-1}>Siguiente →</button>
-          </div>}
-        </>)}
-        {submitted && results.length===0 && <div style={{ textAlign:"center", padding:40, color:T.muted }}><div style={{ fontSize:32, marginBottom:12 }}>◈</div><div style={{ fontSize:15, fontWeight:500, color:T.text, marginBottom:8 }}>Sin resultados</div><div style={{ fontSize:13 }}>Prueba: snatch · clean · hspu · row</div></div>}
+        
+        {/* Type Modal */}
+        {typeModalOpen && (
+          <div 
+            style={{
+              position:"fixed",
+              top:0,
+              left:0,
+              right:0,
+              bottom:0,
+              background:"rgba(0,0,0,0.5)",
+              zIndex:100,
+              display:"flex",
+              alignItems:"flex-end"
+            }}
+            onClick={() => setTypeModalOpen(false)}
+          >
+            <div 
+              style={{
+                background:"white",
+                width:"100%",
+                borderRadius:"20px 20px 0 0",
+                padding:"20px",
+                animation:"slideUp 0.3s ease-out"
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{fontSize:15, fontWeight:600, color:T.text, marginBottom:14}}>Filtrar por Type</div>
+              
+              <button 
+                onClick={handleSelectAll}
+                style={{
+                  width:"100%",
+                  padding:"12px 14px",
+                  border:`1px solid ${T.border}`,
+                  borderRadius:10,
+                  marginBottom:8,
+                  cursor:"pointer",
+                  background:activeCats.length===4?T.sandy:"#F5EFEA",
+                  color:activeCats.length===4?"white":T.text,
+                  fontWeight:500,
+                  fontSize:13,
+                  fontFamily:T.font,
+                  transition:"all 0.2s"
+                }}
+              >
+                All Types
+              </button>
+              
+              {["STRENGTH","WOD","TEAMWOD","ENDURANCE"].map(cat => {
+                const m = CAT_META[cat];
+                const isActive = activeCats.length === 1 && activeCats.includes(cat);
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => handleSelectCat(cat)}
+                    style={{
+                      width:"100%",
+                      padding:"12px 14px",
+                      border:`1px solid ${T.border}`,
+                      borderRadius:10,
+                      marginBottom:8,
+                      cursor:"pointer",
+                      background:isActive?T.sandy:"#F5EFEA",
+                      color:isActive?"white":T.text,
+                      fontWeight:500,
+                      fontSize:13,
+                      fontFamily:T.font,
+                      transition:"all 0.2s"
+                    }}
+                  >
+                    {m.icon} {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
+        {/* Results Header */}
+        {submitted && (
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <span style={{ fontSize:13, color:T.muted }}>
+              <b style={{ color:T.text }}>{results.length}</b> resultado{results.length!==1?"s":""}
+              <span style={{ color:T.sandy }}> · "{submitted}"</span>
+            </span>
+            {results.length>1 && <span style={{ fontSize:11, color:T.muted }}>{index+1}/{results.length}</span>}
+          </div>
+        )}
+        
+        {/* Results */}
+        {current && (
+          <>
+            <WorkoutCard workout={current} keyword={submitted} />
+            <ShareBlock text={buildShareTextSingle(current)} />
+            {results.length>1 && (
+              <div style={{ display:"flex", gap:8, marginTop:12 }}>
+                <button 
+                  style={{ flex:1, padding:"12px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, fontSize:13, fontWeight:500, color:index===0?T.border2:T.muted, cursor:index===0?"default":"pointer", fontFamily:T.font }} 
+                  onClick={()=>setIndex(i=>Math.max(0,i-1))} 
+                  disabled={index===0}
+                >
+                  ← Anterior
+                </button>
+                <span style={{ display:"flex", alignItems:"center", fontSize:11, color:T.muted, padding:"0 8px" }}>{index+1}/{results.length}</span>
+                <button 
+                  style={{ flex:1, padding:"12px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, fontSize:13, fontWeight:500, color:index===results.length-1?T.border2:T.muted, cursor:index===results.length-1?"default":"pointer", fontFamily:T.font }} 
+                  onClick={()=>setIndex(i=>Math.min(results.length-1,i+1))} 
+                  disabled={index===results.length-1}
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
+          </>
+        )}
+        
+        {submitted && results.length===0 && (
+          <div style={{ textAlign:"center", padding:40, color:T.muted }}>
+            <div style={{ fontSize:32, marginBottom:12 }}>◈</div>
+            <div style={{ fontSize:15, fontWeight:500, color:T.text, marginBottom:8 }}>Sin resultados</div>
+            <div style={{ fontSize:13 }}>Prueba otra búsqueda</div>
+          </div>
+        )}
       </div>
+      
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
