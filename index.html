@@ -1743,7 +1743,7 @@ function CreateTraining({ onBack }) {
   const [typeModalOpen, setTypeModalOpen] = useState(null);
 
   // Ejercicios para sugerencias
-  const EXERCISE_SUGGESTIONS = ["snatch","power snatch","clean","power clean","squat clean","squat","front squat","back squat","deadlift","t2bar","toes to bar","c2b","chest to bar","pull up","muscle up","ring muscle up","hspu","handstand push up","push press","jerk","thruster","dumbbell","kettlebell","wall ball","box jump","burpee","rope","row","bike","run","double under","du"];
+  const EXERCISE_SUGGESTIONS = ["snatch","arrancada","power snatch","ps","p.snatch","arrancada fuerza","psnatch","squat snatch","full snatch","clean","cargada","c","pclean","pc","power clean","cargada fuerza","squat clean","jerk","j","push jerk","pj","pjerk","split jerk","thruster","deadlift","dl","dlift","ttb","toes to bar","toes2bar","toes bar","chest to bar","ctb","pull up","pup","bmu","muscle up","bar muscle up","rmu","ring muscle up","handstand push up","hspu","push press","ppress","pp","box jump","bj","bjump","burpee","double under","du","wall ball","wb","row","remo","bike","bike erg","erg","assault","bici","bike ass","run","correr","rope","cuerda","dumbbell","mancuerna","mancuernas","kettlebell","kettle","kb","squat","sentadilla","front squat","front","sentadilla frontal","back squat","back","sentadilla trasera","hs walk","handstand walk","hacer el pino","andar con las manos","wall walk","wall climb","wwalk","wclimb","hs hold","handstand hold"];
 
   const handleNumChange = (n) => {
     setNumBlocks(n);
@@ -1759,10 +1759,7 @@ function CreateTraining({ onBack }) {
     : [];
 
   const addSuggestion = (suggestion) => {
-    const current = keywords.split(',').map(s => s.trim()).filter(Boolean);
-    if (!current.includes(suggestion)) {
-      setKeywords(current.length > 0 ? current.join(', ') + ', ' + suggestion : suggestion);
-    }
+    setKeywords(suggestion);
     setShowSuggestions(false);
   };
 
@@ -1970,14 +1967,29 @@ function SearchTraining({ onBack }) {
   const [activeCats, setActiveCats] = useState(["STRENGTH","WOD","TEAMWOD","ENDURANCE"]);
   const [typeModalOpen, setTypeModalOpen] = useState(false);
   const [index, setIndex] = useState(0);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const searchable = useMemo(()=>WORKOUTS.filter(w=>w.cat!=="WARMUP"),[]);
+  
+  // Ejercicios para sugerencias
+  const EXERCISE_SUGGESTIONS = ["snatch","arrancada","power snatch","ps","p.snatch","arrancada fuerza","psnatch","squat snatch","full snatch","clean","cargada","c","pclean","pc","power clean","cargada fuerza","squat clean","jerk","j","push jerk","pj","pjerk","split jerk","thruster","deadlift","dl","dlift","ttb","toes to bar","toes2bar","toes bar","chest to bar","ctb","pull up","pup","bmu","muscle up","bar muscle up","rmu","ring muscle up","handstand push up","hspu","push press","ppress","pp","box jump","bj","bjump","burpee","double under","du","wall ball","wb","row","remo","bike","bike erg","erg","assault","bici","bike ass","run","correr","rope","cuerda","dumbbell","mancuerna","mancuernas","kettlebell","kettle","kb","squat","sentadilla","front squat","front","sentadilla frontal","back squat","back","sentadilla trasera","hs walk","handstand walk","hacer el pino","andar con las manos","wall walk","wall climb","wwalk","wclimb","hs hold","handstand hold"];
+
   const toggleCat = (cat) => { setActiveCats(prev=>prev.includes(cat)?prev.length>1?prev.filter(c=>c!==cat):prev:[...prev,cat]); setIndex(0); };
   const results = useMemo(()=>{
     const kws=submitted.toLowerCase().split(/[\s,]+/).filter(Boolean);
     return searchable.filter(w=>{ if(!activeCats.includes(w.cat)) return false; if(!kws.length) return true; const t=[w.label,...w.ejercicios,...w.tags].join(" ").toLowerCase(); return kws.every(k=>t.includes(k)); });
   },[submitted,activeCats,searchable]);
   const current=results[index]||null;
-  const search=()=>{ setSubmitted(query); setIndex(0); };
+  const search=()=>{ setSubmitted(query); setIndex(0); setShowSuggestions(false); };
+  
+  // Filter suggestions based on input
+  const filteredSuggestions = query.trim().length > 0 
+    ? EXERCISE_SUGGESTIONS.filter(s => s.toLowerCase().includes(query.toLowerCase()))
+    : [];
+
+  const selectSuggestion = (suggestion) => {
+    setQuery(suggestion);
+    setShowSuggestions(false);
+  };
   
   // Get active type label
   const getTypeLabel = () => {
@@ -2005,9 +2017,55 @@ function SearchTraining({ onBack }) {
     <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
       <PageHeader title="SEARCH" sub={`${searchable.length} entrenamientos disponibles`} onBack={onBack} />
       <div style={{ padding:"20px 20px 60px" }}>
-        {/* Search Input */}
-        <div style={{ display:"flex", gap:8, marginBottom:14 }}>
-          <AppInput value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>e.key==="Enter"&&search()} placeholder="Busca por nombre..." autoFocus />
+        {/* Search Input con Sugerencias */}
+        <div style={{ display:"flex", gap:8, marginBottom:14, position:"relative" }}>
+          <div style={{flex:1, position:"relative"}}>
+            <AppInput 
+              value={query} 
+              onChange={e=>{ setQuery(e.target.value); setShowSuggestions(true); }} 
+              onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
+              onKeyDown={e=>e.key==="Enter"&&search()} 
+              placeholder="Busca por nombre..." 
+              autoFocus 
+            />
+            {/* SUGGESTIONS DROPDOWN */}
+            {showSuggestions && filteredSuggestions.length > 0 && (
+              <div style={{
+                position:"absolute",
+                top:"100%",
+                left:0,
+                right:0,
+                background:"white",
+                border:`1px solid ${T.border}`,
+                borderTop:"none",
+                borderRadius:"0 0 10px 10px",
+                maxHeight:"200px",
+                overflowY:"auto",
+                zIndex:10,
+                marginTop:"-4px",
+                boxShadow:"0 4px 12px rgba(0,0,0,0.1)"
+              }}>
+                {filteredSuggestions.map(suggestion => (
+                  <div
+                    key={suggestion}
+                    onClick={() => selectSuggestion(suggestion)}
+                    style={{
+                      padding:"10px 14px",
+                      borderBottom:`1px solid ${T.border2}`,
+                      cursor:"pointer",
+                      fontSize:13,
+                      color:T.text,
+                      transition:"all 0.2s"
+                    }}
+                    onMouseEnter={e => e.target.style.background = T.surface}
+                    onMouseLeave={e => e.target.style.background = "white"}
+                  >
+                    <span style={{color:T.sandy, fontWeight:600}}>{suggestion}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <button onClick={search} style={{ background:T.graphite, border:"none", borderRadius:14, color:T.bg, fontSize:18, fontWeight:600, padding:"0 18px", cursor:"pointer", fontFamily:T.font, flexShrink:0 }}>›</button>
         </div>
         
