@@ -1739,6 +1739,11 @@ function CreateTraining({ onBack }) {
   const [blockCats, setBlockCats] = useState(["WARMUP","STRENGTH","WOD"]);
   const [generated, setGenerated] = useState(null);
   const [step, setStep] = useState("config");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [typeModalOpen, setTypeModalOpen] = useState(null);
+
+  // Ejercicios para sugerencias
+  const EXERCISE_SUGGESTIONS = ["snatch","power snatch","clean","power clean","squat clean","squat","front squat","back squat","deadlift","t2bar","toes to bar","c2b","chest to bar","pull up","muscle up","ring muscle up","hspu","handstand push up","push press","jerk","thruster","dumbbell","kettlebell","wall ball","box jump","burpee","rope","row","bike","run","double under","du"];
 
   const handleNumChange = (n) => {
     setNumBlocks(n);
@@ -1748,17 +1753,83 @@ function CreateTraining({ onBack }) {
   const handleGenerate = () => { setGenerated(blockCats.map(cat=>generateBlock(cat,keywords))); setStep("result"); };
   const regenerate = (i) => setGenerated(prev => { const n=[...prev]; n[i]=generateBlock(blockCats[i],keywords); return n; });
 
+  // Filter suggestions based on input
+  const filteredSuggestions = keywords.trim().length > 0 
+    ? EXERCISE_SUGGESTIONS.filter(s => s.toLowerCase().includes(keywords.toLowerCase()))
+    : [];
+
+  const addSuggestion = (suggestion) => {
+    const current = keywords.split(',').map(s => s.trim()).filter(Boolean);
+    if (!current.includes(suggestion)) {
+      setKeywords(current.length > 0 ? current.join(', ') + ', ' + suggestion : suggestion);
+    }
+    setShowSuggestions(false);
+  };
+
+  const selectBlockType = (blockIndex, cat) => {
+    const n = [...blockCats];
+    n[blockIndex] = cat;
+    setBlockCats(n);
+    setTypeModalOpen(null);
+  };
+
   return (
     <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
       <PageHeader title="CREATE" sub="Genera tu sesión" onBack={onBack} />
       <div style={{ padding:"24px 20px 60px" }}>
         {step==="config" && (
           <>
+            {/* SECTION 1: EJERCICIOS CON SUGERENCIAS */}
             <div style={{ marginBottom:28 }}>
               <SectionLabel num="1">Ejercicios a entrenar</SectionLabel>
-              <AppInput value={keywords} onChange={e=>setKeywords(e.target.value)} placeholder="snatch, t2bar, squat clean, rope..." />
+              <div style={{ position:"relative" }}>
+                <AppInput 
+                  value={keywords} 
+                  onChange={e => { setKeywords(e.target.value); setShowSuggestions(true); }} 
+                  onFocus={() => keywords.trim().length > 0 && setShowSuggestions(true)}
+                  placeholder="snatch, t2bar, squat clean, rope..." 
+                />
+                {showSuggestions && filteredSuggestions.length > 0 && (
+                  <div style={{
+                    position:"absolute",
+                    top:"100%",
+                    left:0,
+                    right:0,
+                    background:"white",
+                    border:`1px solid ${T.border}`,
+                    borderTop:"none",
+                    borderRadius:"0 0 10px 10px",
+                    maxHeight:"200px",
+                    overflowY:"auto",
+                    zIndex:10,
+                    marginTop:"-4px",
+                    boxShadow:"0 4px 12px rgba(0,0,0,0.1)"
+                  }}>
+                    {filteredSuggestions.map(suggestion => (
+                      <div
+                        key={suggestion}
+                        onClick={() => addSuggestion(suggestion)}
+                        style={{
+                          padding:"10px 14px",
+                          borderBottom:`1px solid ${T.border2}`,
+                          cursor:"pointer",
+                          fontSize:13,
+                          color:T.text,
+                          transition:"all 0.2s"
+                        }}
+                        onMouseEnter={e => e.target.style.background = T.surface}
+                        onMouseLeave={e => e.target.style.background = "white"}
+                      >
+                        <span style={{color:T.sandy, fontWeight:600}}>{suggestion}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div style={{ fontSize:11, color:T.muted, marginTop:6, paddingLeft:4 }}>Varios ejercicios separados por coma</div>
             </div>
+
+            {/* SECTION 2: NÚMERO DE BLOQUES */}
             <div style={{ marginBottom:28 }}>
               <SectionLabel num="2">Número de bloques</SectionLabel>
               <div style={{ display:"flex", gap:8 }}>
@@ -1767,22 +1838,114 @@ function CreateTraining({ onBack }) {
                 ))}
               </div>
             </div>
+
+            {/* SECTION 3: TIPO DE CADA BLOQUE CON DROPDOWNS */}
             <div style={{ marginBottom:32 }}>
               <SectionLabel num="3">Tipo de cada bloque</SectionLabel>
-              {Array.from({length:numBlocks}).map((_,i)=>(
-                <div key={i} style={{ marginBottom:14 }}>
-                  <div style={{ fontSize:11, color:T.muted, fontWeight:600, letterSpacing:"0.05em", marginBottom:8 }}>BLOQUE {i+1}</div>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                    {BLOCK_CATS.map(cat=>{ const m=CAT_META[cat]; const active=blockCats[i]===cat;
-                      return <button key={cat} onClick={()=>{ const n=[...blockCats]; n[i]=cat; setBlockCats(n); }} style={{ padding:"7px 14px", borderRadius:20, fontSize:11, fontWeight:500, border:`1px solid ${active?m.color:T.border}`, background:active?m.bg:T.surface, color:active?m.color:T.muted, cursor:"pointer", fontFamily:T.font, whiteSpace:"nowrap" }}>{m.icon} {m.label}</button>;
-                    })}
+              {Array.from({length:numBlocks}).map((_,i)=>{
+                const m = CAT_META[blockCats[i]];
+                return (
+                  <div key={i} style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:11, color:T.muted, fontWeight:600, letterSpacing:"0.05em", marginBottom:8 }}>BLOQUE {i+1}</div>
+                    <button 
+                      onClick={() => setTypeModalOpen(i)}
+                      style={{
+                        width:"100%",
+                        padding:"10px 12px",
+                        border:`1px solid ${T.border}`,
+                        borderRadius:10,
+                        background:T.surface,
+                        fontSize:12,
+                        fontWeight:500,
+                        color:T.text,
+                        cursor:"pointer",
+                        fontFamily:T.font,
+                        display:"flex",
+                        alignItems:"center",
+                        justifyContent:"space-between"
+                      }}
+                    >
+                      <span>{m.icon} {m.label}</span>
+                      <span style={{color:T.muted}}>‣</span>
+                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
+            {/* GENERAR BUTTON */}
             <button onClick={handleGenerate} style={{ width:"100%", padding:"17px 20px", background:T.graphite, color:T.bg, border:"none", borderRadius:16, fontSize:15, fontWeight:600, cursor:"pointer", fontFamily:T.font, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <span>Generar Training</span><span style={{ fontSize:18, opacity:0.5 }}>›</span>
             </button>
+
+            {/* TYPE MODAL */}
+            {typeModalOpen !== null && (
+              <div 
+                style={{
+                  position:"fixed",
+                  top:0,
+                  left:0,
+                  right:0,
+                  bottom:0,
+                  background:"rgba(0,0,0,0.5)",
+                  zIndex:100,
+                  display:"flex",
+                  alignItems:"flex-end"
+                }}
+                onClick={() => setTypeModalOpen(null)}
+              >
+                <div 
+                  style={{
+                    background:"white",
+                    width:"100%",
+                    borderRadius:"20px 20px 0 0",
+                    padding:"20px",
+                    animation:"slideUp 0.3s ease-out"
+                  }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div style={{fontSize:14, fontWeight:600, color:T.text, marginBottom:12}}>Selecciona el tipo para Bloque {typeModalOpen + 1}</div>
+                  
+                  {BLOCK_CATS.map(cat => {
+                    const m = CAT_META[cat];
+                    const isActive = blockCats[typeModalOpen] === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => selectBlockType(typeModalOpen, cat)}
+                        style={{
+                          width:"100%",
+                          padding:"11px 12px",
+                          border:`1px solid ${T.border}`,
+                          borderRadius:10,
+                          marginBottom:8,
+                          cursor:"pointer",
+                          background:isActive?T.sandy:"#F5EFEA",
+                          color:isActive?"white":T.text,
+                          fontWeight:500,
+                          fontSize:12,
+                          fontFamily:T.font,
+                          transition:"all 0.2s",
+                          display:"flex",
+                          alignItems:"center",
+                          gap:8
+                        }}
+                      >
+                        <span>{m.icon}</span>
+                        <span>{m.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <style>{`
+              @keyframes slideUp {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+              }
+            `}</style>
           </>
         )}
         {step==="result" && generated && (
