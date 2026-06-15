@@ -1113,6 +1113,69 @@ const WORKOUTS = [
   { id:581, cat:"TEAMWOD", label:"Worm Journey", ejercicios:["Team of 3","EMOM - 21'","- 15 TTB (A y B) | 12 Pull Ups | 9 Chest to Bar","- 15 Worm squat | DeathLift | Lunges","- 15 TTB (B y C) | 12 Pull Ups | 9 Chest to Bar","- 10 Worm Thrusters | STOH | Hang C&J","- 15 TTB (C y A) | 12 Pull Ups | 9 Chest to Bar","- 5 Worm Clean & Jerk","- REST"], tags:["worm","ttb","toes to bar","chest to bar","ctb","pull ups","team","team of 3","team 3"] }
 ];
 
+// ============================================
+// EXERCISES STRUCTURED - PRIO5 #1
+// ============================================
+const EXERCISES_STRUCTURED = [
+  { id: 1, name: "SNATCH", category: "WeightLifting", description: "Arrancada - Levantar la barra en un movimiento", variants: [{ type: "squat", label: "Squat Snatch", difficulty: "Elite", description: "Sentadilla profunda con la barra", aliases: ["squat snatch", "full snatch", "snatch", "arrancada"] }, { type: "power", label: "Power Snatch", difficulty: "RX", description: "Potencia sin sentadilla profunda", aliases: ["power snatch", "ps", "p.snatch", "arrancada fuerza", "psnatch", "power sn"] }] },
+  { id: 2, name: "CLEAN", category: "WeightLifting", description: "Cargada - Levantar la barra al hombro", variants: [{ type: "squat", label: "Squat Clean", difficulty: "Elite", aliases: ["squat clean", "clean", "cargada", "c"] }, { type: "power", label: "Power Clean", difficulty: "RX", aliases: ["power clean", "pc", "pclean", "cargada fuerza"] }] },
+  { id: 3, name: "JERK", category: "WeightLifting", description: "Envión - Empujar la barra por encima de la cabeza", variants: [{ type: "push", label: "Push Jerk", difficulty: "RX", aliases: ["push jerk", "pj", "pjerk"] }, { type: "split", label: "Split Jerk", difficulty: "Elite", aliases: ["split jerk"] }] },
+  { id: 10, name: "HANDSTAND PUSH UP", category: "Gymnastics", description: "Flexión en posición invertida", variants: [{ type: "strict", label: "HSPU (Strict)", difficulty: "Elite", aliases: ["handstand push up", "hspu", "strict hspu"] }, { type: "kipping", label: "HSPU (Kipping)", difficulty: "RX", aliases: ["kipping hspu", "k.hspu"] }] },
+  { id: 11, name: "HANDSTAND WALK", category: "Gymnastics", description: "Caminar con las manos", variants: [{ type: "distance", label: "HS Walk", difficulty: "Elite", aliases: ["hs walk", "handstand walk", "hacer el pino", "andar con las manos", "hsw"] }] },
+  { id: 12, name: "WALL WALK", category: "Gymnastics", description: "Caminar por la pared hacia arriba", variants: [{ type: "standard", label: "Wall Walk", difficulty: "RX", aliases: ["wall walk", "wall climb", "wwalk", "wclimb"] }] },
+  { id: 13, name: "MUSCLE UP", category: "Gymnastics", description: "Subir a la barra sin saltar", variants: [{ type: "bar", label: "Muscle Up (Bar)", difficulty: "Elite", aliases: ["bmu", "muscle up", "bar muscle up"] }, { type: "ring", label: "Muscle Up (Ring)", difficulty: "Elite", aliases: ["rmu", "ring muscle up"] }] },
+  { id: 14, name: "PULL UP", category: "Gymnastics", description: "Flexión hacia arriba en la barra", variants: [{ type: "standard", label: "Pull Up", difficulty: "Scaled", aliases: ["pull up", "pup", "strict pull up"] }] },
+  { id: 15, name: "TOES TO BAR", category: "Gymnastics", description: "Llevar los dedos de los pies a la barra", variants: [{ type: "standard", label: "Toes to Bar", difficulty: "Intermediate", aliases: ["ttb", "toes to bar", "toes2bar", "toes bar"] }] },
+  { id: 16, name: "CHEST TO BAR", category: "Gymnastics", description: "Llevar el pecho a la barra", variants: [{ type: "standard", label: "Chest to Bar", difficulty: "Elite", aliases: ["chest to bar", "ctb", "c2b"] }] },
+  { id: 20, name: "DEADLIFT", category: "Strength & Power", description: "Peso muerto - Levantar desde el suelo", variants: [{ type: "conventional", label: "Deadlift", difficulty: "Scaled", aliases: ["deadlift", "dl", "dlift"] }] },
+  { id: 21, name: "FRONT SQUAT", category: "Strength & Power", description: "Sentadilla frontal", variants: [{ type: "standard", label: "Front Squat", difficulty: "Intermediate", aliases: ["front squat", "front", "sentadilla frontal"] }] },
+  { id: 22, name: "BACK SQUAT", category: "Strength & Power", description: "Sentadilla trasera", variants: [{ type: "standard", label: "Back Squat", difficulty: "Intermediate", aliases: ["back squat", "back", "sentadilla trasera"] }] },
+  { id: 23, name: "THRUSTER", category: "Strength & Power", description: "Sentadilla + Empuje", variants: [{ type: "standard", label: "Thruster", difficulty: "RX", aliases: ["thruster"] }] },
+  { id: 24, name: "PUSH PRESS", category: "Strength & Power", description: "Empuje con impulso de piernas", variants: [{ type: "standard", label: "Push Press", difficulty: "Intermediate", aliases: ["push press", "ppress", "pp"] }] },
+  { id: 30, name: "BIKE", category: "Cardio", description: "Bicicleta estática", variants: [{ type: "assault", label: "Bike (Assault)", difficulty: "Scaled", aliases: ["bike", "bike erg", "erg", "assault", "bici", "bike ass", "air bike"] }] },
+  { id: 31, name: "ROW", category: "Cardio", description: "Remo", variants: [{ type: "standard", label: "Row", difficulty: "Scaled", aliases: ["row", "remo"] }] },
+  { id: 32, name: "RUN", category: "Cardio", description: "Carrera", variants: [{ type: "standard", label: "Run", difficulty: "Scaled", aliases: ["run", "correr"] }] },
+  { id: 40, name: "ROPE", category: "Accessories", description: "Saltar a la cuerda", variants: [{ type: "single", label: "Single Under", difficulty: "Scaled", aliases: ["rope", "cuerda", "single under"] }, { type: "double", label: "Double Under", difficulty: "Intermediate", aliases: ["double under", "du"] }] },
+  { id: 41, name: "BOX JUMP", category: "Accessories", description: "Salto a la caja", variants: [{ type: "standard", label: "Box Jump", difficulty: "Scaled", aliases: ["box jump", "bj", "bjump"] }] },
+  { id: 42, name: "BURPEE", category: "Accessories", description: "Burpee - Flexión + salto", variants: [{ type: "standard", label: "Burpee", difficulty: "Intermediate", aliases: ["burpee"] }] },
+  { id: 43, name: "WALL BALL", category: "Accessories", description: "Lanzamiento de balón a la pared", variants: [{ type: "standard", label: "Wall Ball", difficulty: "Scaled", aliases: ["wall ball", "wb"] }] },
+  { id: 44, name: "DUMBBELL", category: "Accessories", description: "Mancuernas", variants: [{ type: "standard", label: "Dumbbell", difficulty: "Scaled", aliases: ["dumbbell", "mancuerna", "mancuernas"] }] },
+  { id: 45, name: "KETTLEBELL", category: "Accessories", description: "Pesa rusa", variants: [{ type: "standard", label: "Kettlebell", difficulty: "Scaled", aliases: ["kettlebell", "kettle", "kb"] }] }
+];
+
+// Smart search function for exercises
+function searchExercises(query) {
+  if (!query || query.trim().length === 0) return [];
+  const q = query.toLowerCase().trim();
+  const results = [];
+  
+  EXERCISES_STRUCTURED.forEach(exercise => {
+    exercise.variants.forEach(variant => {
+      const matchedAlias = variant.aliases.find(alias => alias.toLowerCase().includes(q));
+      if (matchedAlias) {
+        const relevance = calculateRelevance(matchedAlias.toLowerCase(), q);
+        results.push({
+          exercise: exercise.name,
+          variant: variant.label,
+          category: exercise.category,
+          difficulty: variant.difficulty,
+          matchedAlias: matchedAlias,
+          relevance: relevance,
+          description: variant.description || ""
+        });
+      }
+    });
+  });
+  
+  return results.sort((a, b) => b.relevance - a.relevance).slice(0, 7);
+}
+
+function calculateRelevance(alias, query) {
+  if (alias === query) return 100; // Exacta
+  if (alias.startsWith(query)) return 80; // Comienza
+  return 50; // Contiene
+}
+
 const WARMUP_DB = {
   // Core/Abdomen — siempre disponibles para Parte A
   core: [
@@ -1753,13 +1816,11 @@ function CreateTraining({ onBack }) {
   const handleGenerate = () => { setGenerated(blockCats.map(cat=>generateBlock(cat,keywords))); setStep("result"); };
   const regenerate = (i) => setGenerated(prev => { const n=[...prev]; n[i]=generateBlock(blockCats[i],keywords); return n; });
 
-  // Filter suggestions based on input
-  const filteredSuggestions = keywords.trim().length > 0 
-    ? EXERCISE_SUGGESTIONS.filter(s => s.toLowerCase().includes(keywords.toLowerCase()))
-    : [];
+  // Smart search for exercises
+  const filteredSuggestions = useMemo(() => searchExercises(keywords), [keywords]);
 
   const addSuggestion = (suggestion) => {
-    setKeywords(suggestion);
+    setKeywords(suggestion.variant);
     setShowSuggestions(false);
   };
 
@@ -1802,22 +1863,23 @@ function CreateTraining({ onBack }) {
                     marginTop:"-4px",
                     boxShadow:"0 4px 12px rgba(0,0,0,0.1)"
                   }}>
-                    {filteredSuggestions.map(suggestion => (
+                    {filteredSuggestions.map((suggestion, idx) => (
                       <div
-                        key={suggestion}
+                        key={idx}
                         onClick={() => addSuggestion(suggestion)}
                         style={{
                           padding:"10px 14px",
                           borderBottom:`1px solid ${T.border2}`,
                           cursor:"pointer",
-                          fontSize:13,
+                          fontSize:12,
                           color:T.text,
                           transition:"all 0.2s"
                         }}
                         onMouseEnter={e => e.target.style.background = T.surface}
                         onMouseLeave={e => e.target.style.background = "white"}
                       >
-                        <span style={{color:T.sandy, fontWeight:600}}>{suggestion}</span>
+                        <div style={{fontWeight:600, color:T.sandy}}>{suggestion.variant}</div>
+                        <div style={{fontSize:10, color:T.muted, marginTop:2}}>{suggestion.category} • {suggestion.difficulty}</div>
                       </div>
                     ))}
                   </div>
@@ -1970,9 +2032,6 @@ function SearchTraining({ onBack }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchable = useMemo(()=>WORKOUTS.filter(w=>w.cat!=="WARMUP"),[]);
   
-  // Ejercicios para sugerencias
-  const EXERCISE_SUGGESTIONS = ["snatch","arrancada","power snatch","ps","p.snatch","arrancada fuerza","psnatch","squat snatch","full snatch","clean","cargada","c","pclean","pc","power clean","cargada fuerza","squat clean","jerk","j","push jerk","pj","pjerk","split jerk","thruster","deadlift","dl","dlift","ttb","toes to bar","toes2bar","toes bar","chest to bar","ctb","pull up","pup","bmu","muscle up","bar muscle up","rmu","ring muscle up","handstand push up","hspu","push press","ppress","pp","box jump","bj","bjump","burpee","double under","du","wall ball","wb","row","remo","bike","bike erg","erg","assault","bici","bike ass","run","correr","rope","cuerda","dumbbell","mancuerna","mancuernas","kettlebell","kettle","kb","squat","sentadilla","front squat","front","sentadilla frontal","back squat","back","sentadilla trasera","hs walk","handstand walk","hacer el pino","andar con las manos","wall walk","wall climb","wwalk","wclimb","hs hold","handstand hold"];
-
   const toggleCat = (cat) => { setActiveCats(prev=>prev.includes(cat)?prev.length>1?prev.filter(c=>c!==cat):prev:[...prev,cat]); setIndex(0); };
   const results = useMemo(()=>{
     const kws=submitted.toLowerCase().split(/[\s,]+/).filter(Boolean);
@@ -1981,13 +2040,11 @@ function SearchTraining({ onBack }) {
   const current=results[index]||null;
   const search=()=>{ setSubmitted(query); setIndex(0); setShowSuggestions(false); };
   
-  // Filter suggestions based on input
-  const filteredSuggestions = query.trim().length > 0 
-    ? EXERCISE_SUGGESTIONS.filter(s => s.toLowerCase().includes(query.toLowerCase()))
-    : [];
+  // Smart search for exercises
+  const filteredSuggestions = useMemo(() => searchExercises(query), [query]);
 
   const selectSuggestion = (suggestion) => {
-    setQuery(suggestion);
+    setQuery(suggestion.variant);
     setShowSuggestions(false);
   };
   
@@ -2045,22 +2102,23 @@ function SearchTraining({ onBack }) {
                 marginTop:"-4px",
                 boxShadow:"0 4px 12px rgba(0,0,0,0.1)"
               }}>
-                {filteredSuggestions.map(suggestion => (
+                {filteredSuggestions.map((suggestion, idx) => (
                   <div
-                    key={suggestion}
+                    key={idx}
                     onClick={() => selectSuggestion(suggestion)}
                     style={{
                       padding:"10px 14px",
                       borderBottom:`1px solid ${T.border2}`,
                       cursor:"pointer",
-                      fontSize:13,
+                      fontSize:12,
                       color:T.text,
                       transition:"all 0.2s"
                     }}
                     onMouseEnter={e => e.target.style.background = T.surface}
                     onMouseLeave={e => e.target.style.background = "white"}
                   >
-                    <span style={{color:T.sandy, fontWeight:600}}>{suggestion}</span>
+                    <div style={{fontWeight:600, color:T.sandy}}>{suggestion.variant}</div>
+                    <div style={{fontSize:10, color:T.muted, marginTop:2}}>{suggestion.category} • {suggestion.difficulty}</div>
                   </div>
                 ))}
               </div>
