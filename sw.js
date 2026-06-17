@@ -1,10 +1,10 @@
-const CACHE_NAME = 'wod-gen-v1';
+const CACHE_NAME = 'wod-gen-v2';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon.png',
-  '/icon-512.png',
+  '/wod-gen/',
+  '/wod-gen/index.html',
+  '/wod-gen/manifest.json',
+  '/wod-gen/icon.png',
+  '/wod-gen/icon-512.png',
   'https://unpkg.com/react@18/umd/react.production.min.js',
   'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
   'https://unpkg.com/@babel/standalone/babel.min.js'
