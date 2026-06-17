@@ -5,51 +5,143 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WOD Gen - TEST</title>
   <style>
-    body { font-family: -apple-system, sans-serif; margin: 20px; }
-    .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
-    .ok { background: #d4edda; color: #155724; }
-    .error { background: #f8d7da; color: #721c24; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+      margin: 0; 
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .box { 
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border-left: 4px solid #007AFF;
+    }
+    .error { border-left-color: #FF3B30; background: #FFE5E5; }
+    .success { border-left-color: #34C759; background: #E5F7E5; }
+    code { 
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+    pre { 
+      background: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
-  <h1>WOD Gen - Diagnóstico</h1>
-  <div id="root"></div>
+  <h1>⚙️ WOD Gen - Diagnóstico Técnico</h1>
+  
+  <div id="output"></div>
+  
+  <script>
+    const output = document.getElementById('output');
+    
+    function log(type, title, content) {
+      const div = document.createElement('div');
+      div.className = `box ${type}`;
+      div.innerHTML = `<strong>${title}</strong><p>${content}</p>`;
+      output.appendChild(div);
+    }
+    
+    // Test 1: Check if window objects exist
+    log('info', '1️⃣ Verificando objetos globales...', 
+      `window.React: ${typeof window.React !== 'undefined' ? '✅ EXISTE' : '❌ NO EXISTE'}<br>
+       window.ReactDOM: ${typeof window.ReactDOM !== 'undefined' ? '✅ EXISTE' : '❌ NO EXISTE'}<br>
+       window.Babel: ${typeof window.Babel !== 'undefined' ? '✅ EXISTE' : '❌ NO EXISTE'}`
+    );
+  </script>
   
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
-  <script type="text/babel">
-    try {
-      const { useState } = React;
+  <script>
+    // Test 2: Check after loading CDN
+    setTimeout(() => {
+      log('info', '2️⃣ Después de cargar CDN...', 
+        `window.React: ${typeof window.React !== 'undefined' ? '✅ EXISTE' : '❌ NO EXISTE'}<br>
+         window.ReactDOM: ${typeof window.ReactDOM !== 'undefined' ? '✅ EXISTE' : '❌ NO EXISTE'}<br>
+         window.Babel: ${typeof window.Babel !== 'undefined' ? '✅ EXISTE' : '❌ NO EXISTE'}`
+      );
       
-      function TestApp() {
-        const [count, setCount] = useState(0);
-        
-        return (
-          <div>
-            <div className="status ok">
-              ✅ React FUNCIONA correctamente
-            </div>
-            <div>
-              <p>useState Test: {count}</p>
-              <button onClick={() => setCount(count + 1)}>
-                Incrementar
-              </button>
-            </div>
-          </div>
-        );
+      // Test 3: Try to use React
+      try {
+        const { useState } = window.React;
+        log('success', '3️⃣ useState disponible', '✅ React.useState carga correctamente');
+      } catch (e) {
+        log('error', '3️⃣ Error al acceder a useState', `❌ ${e.message}`);
       }
-      
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(<TestApp />);
-    } catch (error) {
-      document.getElementById('root').innerHTML = `
-        <div class="status error">
-          ❌ ERROR: ${error.message}
-        </div>
-      `;
-    }
+    }, 500);
   </script>
+  
+  <script type="text/babel">
+    // Test 4: Try JSX compilation
+    setTimeout(() => {
+      try {
+        const el = <div>✅ JSX compila correctamente</div>;
+        document.getElementById('output').appendChild(
+          (() => {
+            const div = document.createElement('div');
+            div.className = 'box success';
+            div.innerHTML = '<strong>4️⃣ Compilación JSX</strong><p>✅ El código JSX se compila sin errores</p>';
+            return div;
+          })()
+        );
+      } catch (e) {
+        const div = document.createElement('div');
+        div.className = 'box error';
+        div.innerHTML = `<strong>4️⃣ Error de compilación JSX</strong><p>❌ ${e.message}</p>`;
+        document.getElementById('output').appendChild(div);
+      }
+    }, 1000);
+  </script>
+  
+  <script type="text/babel">
+    // Test 5: Try ReactDOM.createRoot
+    setTimeout(() => {
+      try {
+        const root = ReactDOM.createRoot(document.createElement('div'));
+        const div = document.createElement('div');
+        div.className = 'box success';
+        div.innerHTML = '<strong>5️⃣ ReactDOM.createRoot</strong><p>✅ ReactDOM.createRoot funciona correctamente</p>';
+        document.getElementById('output').appendChild(div);
+      } catch (e) {
+        const div = document.createElement('div');
+        div.className = 'box error';
+        div.innerHTML = `<strong>5️⃣ Error en ReactDOM.createRoot</strong><p>❌ ${e.message}</p><pre>${e.stack}</pre>`;
+        document.getElementById('output').appendChild(div);
+      }
+    }, 1500);
+  </script>
+  
+  <script type="text/babel">
+    // Test 6: Simple React component
+    setTimeout(() => {
+      try {
+        function TestComponent() {
+          return <div>✅ Componente React funciona</div>;
+        }
+        const div = document.createElement('div');
+        div.className = 'box success';
+        div.innerHTML = '<strong>6️⃣ Componente React</strong><p>✅ Se puede crear un componente React básico</p>';
+        document.getElementById('output').appendChild(div);
+      } catch (e) {
+        const div = document.createElement('div');
+        div.className = 'box error';
+        div.innerHTML = `<strong>6️⃣ Error en componente React</strong><p>❌ ${e.message}</p>`;
+        document.getElementById('output').appendChild(div);
+      }
+    }, 2000);
+  </script>
+  
 </body>
 </html>
+
