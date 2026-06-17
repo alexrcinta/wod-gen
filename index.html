@@ -1113,6 +1113,83 @@ const WORKOUTS = [
   { id:581, cat:"TEAMWOD", label:"Worm Journey", ejercicios:["Team of 3","EMOM - 21'","- 15 TTB (A y B) | 12 Pull Ups | 9 Chest to Bar","- 15 Worm squat | DeathLift | Lunges","- 15 TTB (B y C) | 12 Pull Ups | 9 Chest to Bar","- 10 Worm Thrusters | STOH | Hang C&J","- 15 TTB (C y A) | 12 Pull Ups | 9 Chest to Bar","- 5 Worm Clean & Jerk","- REST"], tags:["worm","ttb","toes to bar","chest to bar","ctb","pull ups","team","team of 3","team 3"] }
 ];
 
+// ============================================
+// EXERCISES STRUCTURED - PRIO5 #1 IMPLEMENTATION
+// ============================================
+const EXERCISES_STRUCTURED = [
+  { id: 1, name: "SNATCH", category: "WeightLifting", description: "Arrancada - Levantar la barra en un movimiento", variants: [{ type: "squat", label: "Squat Snatch", difficulty: "RX", description: "Sentadilla profunda con la barra", aliases: ["squat snatch", "full snatch", "snatch", "arrancada"] }, { type: "power", label: "Power Snatch", difficulty: "Intermediate", description: "Potencia sin sentadilla profunda", aliases: ["power snatch", "ps", "p.snatch", "arrancada fuerza", "psnatch", "power sn"] }, { type: "drop", label: "Drop Snatch", difficulty: "Intermediate", aliases: ["drop snatch", "snatch"] }, { type: "balance", label: "Snatch Balance", difficulty: "Intermediate", aliases: ["snatch balance", "balance"] }] },
+  { id: 2, name: "CLEAN", category: "WeightLifting", description: "Cargada - Levantar la barra al hombro", variants: [{ type: "squat", label: "Squat Clean", difficulty: "RX", aliases: ["squat clean", "clean", "cargada", "c"] }, { type: "power", label: "Power Clean", difficulty: "Intermediate", aliases: ["power clean", "pc", "pclean", "cargada fuerza"] }] },
+  { id: 3, name: "JERK", category: "WeightLifting", description: "Envión - Empujar la barra por encima de la cabeza", variants: [{ type: "push", label: "Push Jerk", difficulty: "Intermediate", aliases: ["push jerk", "pj", "pjerk"] }, { type: "split", label: "Split Jerk", difficulty: "RX", aliases: ["split jerk"] }] },
+  { id: 10, name: "HANDSTAND PUSH UP", category: "Gymnastics", description: "Flexión en posición invertida", variants: [{ type: "strict", label: "HSPU Strict", difficulty: "RX", aliases: ["handstand push up", "hspu", "strict hspu"] }, { type: "kipping", label: "HSPU", difficulty: "Intermediate", aliases: ["kipping hspu", "k.hspu"] }] },
+  { id: 11, name: "HANDSTAND WALK", category: "Gymnastics", description: "Caminar con las manos", variants: [{ type: "distance", label: "Handstand Walk", difficulty: "RX", aliases: ["hs walk", "handstand walk", "hacer el pino", "andar con las manos", "hsw"] }] },
+  { id: 12, name: "WALL WALK", category: "Gymnastics", description: "Caminar por la pared hacia arriba", variants: [{ type: "standard", label: "Wall Walk", difficulty: "Intermediate", aliases: ["wall walk", "wall climb", "wwalk", "wclimb"] }] },
+  { id: 13, name: "MUSCLE UP", category: "Gymnastics", description: "Subir a la barra sin saltar", variants: [{ type: "bar", label: "Bar Muscle Up", difficulty: "RX", aliases: ["bmu", "muscle up", "bar muscle up"] }, { type: "ring", label: "Ring Muscle Up", difficulty: "RX", aliases: ["rmu", "ring muscle up"] }] },
+  { id: 14, name: "PULL UP", category: "Gymnastics", description: "Flexión hacia arriba en la barra", variants: [{ type: "standard", label: "Pull Up", difficulty: "Scaled", aliases: ["pull up", "pup", "strict pull up"] }] },
+  { id: 15, name: "TOES TO BAR", category: "Gymnastics", description: "Llevar los dedos de los pies a la barra", variants: [{ type: "standard", label: "Toes to Bar", difficulty: "Intermediate", aliases: ["ttb", "toes to bar", "toes2bar", "toes bar"] }] },
+  { id: 16, name: "CHEST TO BAR", category: "Gymnastics", description: "Llevar el pecho a la barra", variants: [{ type: "standard", label: "Chest to Bar", difficulty: "RX", aliases: ["chest to bar", "ctb", "c2b"] }] },
+  { id: 20, name: "DEADLIFT", category: "Strength & Power", description: "Peso muerto - Levantar desde el suelo", variants: [{ type: "conventional", label: "Deadlift", difficulty: "Scaled", aliases: ["deadlift", "dl", "dlift"] }, { type: "sumo", label: "Sumo Deadlift", difficulty: "Scaled", aliases: ["sumo deadlift", "sdl"] }, { type: "sumo_high_pull", label: "Sumo Deadlift High Pull", difficulty: "Scaled", aliases: ["sumo deadlift high pull", "sdlhp"] }] },
+  { id: 21, name: "FRONT SQUAT", category: "Strength & Power", description: "Sentadilla frontal", variants: [{ type: "standard", label: "Front Squat", difficulty: "Intermediate", aliases: ["front squat", "front", "sentadilla frontal"] }] },
+  { id: 22, name: "BACK SQUAT", category: "Strength & Power", description: "Sentadilla trasera", variants: [{ type: "standard", label: "Back Squat", difficulty: "Intermediate", aliases: ["back squat", "back", "sentadilla trasera"] }] },
+  { id: 23, name: "THRUSTER", category: "Strength & Power", description: "Sentadilla + Empuje", variants: [{ type: "standard", label: "Thruster", difficulty: "Intermediate", aliases: ["thruster"] }] },
+  { id: 24, name: "PUSH PRESS", category: "Strength & Power", description: "Empuje con impulso de piernas", variants: [{ type: "standard", label: "Push Press", difficulty: "Intermediate", aliases: ["push press", "ppress", "pp"] }] },
+  { id: 25, name: "BENCH PRESS", category: "Strength & Power", description: "Pecho", variants: [{ type: "standard", label: "Bench Press", difficulty: "Scaled", aliases: ["bench press", "bp"] }, { type: "dumbbell", label: "DB Bench Press", difficulty: "Scaled", aliases: ["db bench press", "bench press"] }] },
+  { id: 26, name: "LUNGE", category: "Strength & Power", description: "Zancada", variants: [{ type: "standard", label: "Lunge", difficulty: "Scaled", aliases: ["lunge", "lunges", "alt lunge"] }, { type: "reverse", label: "Reverse Lunge", difficulty: "Scaled", aliases: ["reverse lunge", "kb reverse lunge"] }, { type: "walking", label: "Walking Lunge", difficulty: "Scaled", aliases: ["walking lunge"] }, { type: "overhead", label: "Overhead Lunge", difficulty: "Intermediate", aliases: ["overhead lunge", "oh lunge"] }] },
+  { id: 27, name: "OVERHEAD SQUAT", category: "Strength & Power", description: "Agarre de snatch y bajar hasta romper el paralelo.", variants: [{ type: "standard", label: "Overhead Squat", difficulty: "Intermediate", aliases: ["overhead squat", "ohs", "oh squat"] }] },
+  { id: 28, name: "CLUSTER", category: "Strength & Power", description: "Cluster", variants: [{ type: "standard", label: "Cluster", difficulty: "Intermediate", aliases: ["cluster"] }] },
+  { id: 30, name: "BIKE", category: "Cardio", description: "Bicicleta estática", variants: [{ type: "assault", label: "Assault Bike", difficulty: "Scaled", aliases: ["bike", "assault", "assault bike", "bici", "bike ass", "air bike"] }, { type: "erg", label: "Erg Bike", difficulty: "Scaled", aliases: ["bike erg", "erg", "erg bike"] }] },
+  { id: 31, name: "SKI", category: "Cardio", description: "Máquina de esquí", variants: [{ type: "standard", label: "Ski", difficulty: "Scaled", aliases: ["ski", "ski erg"] }] },
+  { id: 32, name: "SHUTTLE RUN", category: "Cardio", description: "Carrera de ida y vuelta", variants: [{ type: "standard", label: "Shuttle Run", difficulty: "Scaled", aliases: ["shuttle run", "shuttle"] }] },
+  { id: 33, name: "ROW", category: "Cardio", description: "Remo", variants: [{ type: "standard", label: "Row", difficulty: "Scaled", aliases: ["row", "remo"] }] },
+  { id: 34, name: "RUN", category: "Cardio", description: "Carrera", variants: [{ type: "standard", label: "Run", difficulty: "Scaled", aliases: ["run", "correr"] }] },
+  { id: 40, name: "ROPE", category: "Accessories", description: "Cuerda", variants: [{ type: "standard", label: "Rope", difficulty: "RX", aliases: ["rope", "cuerda", "rope climb"] }, { type: "legless", label: "Rope Legless", difficulty: "RX", aliases: ["legless", "rope", "rope legless"] }] },
+  { id: 41, name: "UNDERS", category: "Accessories", description: "Saltar a la comba", variants: [{ type: "single", label: "Single Under", difficulty: "Scaled", aliases: ["single under", "su", "unders"] }, { type: "double", label: "Double Under", difficulty: "Intermediate", aliases: ["double under", "du"] }, { type: "crossover", label: "Crossovers", difficulty: "Intermediate", aliases: ["crossover", "crossovers", "XO"] }, { type: "double_crossover", label: "Double Crossovers", difficulty: "Intermediate", aliases: ["double crossover", "double crossovers", "DUXO"] }, { type: "triple", label: "Triple Under", difficulty: "Intermediate", aliases: ["triple under", "tu"] }] },
+  { id: 42, name: "BOX JUMP", category: "Accessories", description: "Salto a la caja", variants: [{ type: "standard", label: "Box Jump", difficulty: "Scaled", aliases: ["box jump", "bj", "bjump"] }] },
+  { id: 43, name: "BURPEE", category: "Accessories", description: "Burpee - Flexión + salto", variants: [{ type: "standard", label: "Burpee", difficulty: "Intermediate", aliases: ["burpee"] }] },
+  { id: 44, name: "WALL BALL", category: "Accessories", description: "Lanzamiento de balón a la pared", variants: [{ type: "standard", label: "Wall Ball", difficulty: "Scaled", aliases: ["wall ball", "wb"] }] },
+  { id: 45, name: "DUMBBELL", category: "Accessories", description: "Mancuernas", variants: [{ type: "standard", label: "Dumbbell", difficulty: "Scaled", aliases: ["dumbbell", "mancuerna", "mancuernas"] }] },
+  { id: 46, name: "KETTLEBELL", category: "Accessories", description: "Pesa rusa", variants: [{ type: "standard", label: "Kettlebell", difficulty: "Scaled", aliases: ["kettlebell", "kettle", "kb"] }] },
+  { id: 49, name: "GHD", category: "Accessories", description: "Máquina específica para trabajar core", variants: [{ type: "sit_up", label: "GHD Sit Up", difficulty: "Scaled", aliases: ["ghd sit up", "ghd", "ghd abs"] }, { type: "back_extension", label: "GHD Back Extension", difficulty: "Scaled", aliases: ["ghd back extension", "ghd extension", "ghd back"] }] },
+  { id: 51, name: "GOBLET SQUAT", category: "Accessories", description: "Sentadilla con peso delantero sujeto por las manos", variants: [{ type: "dumbbell", label: "Goblet Squat (DB)", difficulty: "Scaled", aliases: ["goblet squat", "goblet", "gs", "db goblet"] }, { type: "kettlebell", label: "Goblet Squat (KB)", difficulty: "Scaled", aliases: ["kb goblet squat"] }] },
+  { id: 52, name: "SLAM BALL", category: "Accessories", description: "balón pesado", variants: [{ type: "clean", label: "Slam Ball Clean", difficulty: "Intermediate", aliases: ["slam ball clean", "slam ball"] }, { type: "bear_carry", label: "Slam Ball Bear Carry", difficulty: "Intermediate", aliases: ["slam ball bear carry"] }, { type: "squat", label: "Slam Ball Squat", difficulty: "Intermediate", aliases: ["slam ball squat"] }] },
+  { id: 53, name: "FARMER CARRY", category: "Accessories", description: "Farmer Carry", variants: [{ type: "dumbbell", label: "Farmer Carry (DB)", difficulty: "Scaled", aliases: ["farmer carry", "db farmer carry"] }, { type: "kettlebell", label: "Farmer Carry (KB)", difficulty: "Scaled", aliases: ["kb farmer carry"] }] },
+  { id: 54, name: "PISTOL", category: "Accessories", description: "Sentadilla a una pierna", variants: [{ type: "standard", label: "Pistol", difficulty: "RX", aliases: ["pistol", "alt pistol"] }] },
+  { id: 55, name: "KETTLEBELL SWING", category: "Strength & Power", description: "KettleBell Swing", variants: [{ type: "standard", label: "Kettlebell Swing", difficulty: "Scaled", aliases: ["kettlebell swing", "kb swing", "swing"] }] },
+  { id: 56, name: "DEVIL PRESS", category: "Strength & Power", description: "Devil Press", variants: [{ type: "standard", label: "Devil Press", difficulty: "Scaled", aliases: ["devil press", "devil"] }] },
+  { id: 47, name: "RING DIPS", category: "Gymnastics", description: "Fondos en anillas", variants: [{ type: "standard", label: "Ring Dips", difficulty: "Scaled", aliases: ["ring dips", "ring dip"] }] },
+  { id: 50, name: "L-SIT", category: "Gymnastics", description: "posición L-sit barra/suelo", variants: [{ type: "hold", label: "L-Sit Hold", difficulty: "Scaled", aliases: ["l-sit hold", "l sit hold"] }, { type: "up", label: "L-Sit Up", difficulty: "Scaled", aliases: ["l-sit up", "l sit up"] }] }
+];
+
+// Smart search function for exercises
+function searchExercises(query) {
+  if (!query || query.trim().length === 0) return [];
+  const q = query.toLowerCase().trim();
+  const results = [];
+  EXERCISES_STRUCTURED.forEach(exercise => {
+    exercise.variants.forEach(variant => {
+      const matchedAlias = variant.aliases.find(alias => alias.toLowerCase().includes(q));
+      if (matchedAlias) {
+        const relevance = calculateRelevance(matchedAlias.toLowerCase(), q);
+        results.push({
+          exercise: exercise.name,
+          variant: variant.label,
+          category: exercise.category,
+          difficulty: variant.difficulty,
+          matchedAlias: matchedAlias,
+          relevance: relevance,
+          description: variant.description || ""
+        });
+      }
+    });
+  });
+  return results.sort((a, b) => b.relevance - a.relevance).slice(0, 7);
+}
+
+function calculateRelevance(alias, query) {
+  if (alias === query) return 100;
+  if (alias.startsWith(query)) return 80;
+  return 50;
+}
+
 const WARMUP_DB = {
   // Core/Abdomen — siempre disponibles para Parte A
   core: [
