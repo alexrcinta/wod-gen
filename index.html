@@ -32,6 +32,7 @@
 <body>
   <div id="root"></div>
   <script type="text/babel" data-presets="react">
+try {
 const { useState, useMemo } = React;
 const WORKOUTS = [
 
@@ -3083,6 +3084,19 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(App));
+} catch (error) {
+  console.error('ERROR EN LA APP:', error);
+  document.getElementById('root').innerHTML = `
+    <div style="padding: 20px; font-family: monospace; color: red;">
+      <h2>❌ Error en WOD Gen</h2>
+      <p><strong>Tipo de error:</strong> ${error.name}</p>
+      <p><strong>Mensaje:</strong> ${error.message}</p>
+      <p><strong>Stack:</strong></p>
+      <pre style="background: #f0f0f0; padding: 10px; overflow: auto;">${error.stack}</pre>
+      <p>Por favor, envía esta información a soporte.</p>
+    </div>
+  `;
+}
   </script>
   <script>
     if ('serviceWorker' in navigator) {
