@@ -32,6 +32,10 @@
 <body>
   <div id="root"></div>
   <script type="text/babel" data-presets="react">
+// Esperar a que los CDN carguen completamente antes de ejecutar el código React
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    try {
 const { useState, useMemo } = React;
 const WORKOUTS = [
 
@@ -3006,11 +3010,17 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(App));
+    } catch (error) {
+      console.error('Error al cargar la app:', error);
+      document.getElementById('root').innerHTML = `<div style="padding:20px;color:red;font-family:monospace;"><h2>Error: ${error.message}</h2><p>${error.stack}</p></div>`;
+    }
+  }, 500);
+});
   </script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+        navigator.serviceWorker.register('/wod-gen/sw.js', { scope: '/wod-gen/' }).catch(() => {});
       });
     }
   </script>
