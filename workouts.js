@@ -1077,4 +1077,3 @@ const WORKOUTS = [
   { id:580, cat:"METCON", label:"OPEN GAMES 26.3 - 2026", ejercicios:["For Time (cap 16)","Burpees + Cleans + Thrusters","Rx: (M) 29-38kg / (H) 43-61kg"], tags:["open games","26.3","2026","metcon"] },
   { id:581, cat:"TEAMWOD", label:"Worm Journey", ejercicios:["Team of 3","EMOM - 21'","- 15 TTB (A y B) | 12 Pull Ups | 9 Chest to Bar","- 15 Worm squat | DeathLift | Lunges","- 15 TTB (B y C) | 12 Pull Ups | 9 Chest to Bar","- 10 Worm Thrusters | STOH | Hang C&J","- 15 TTB (C y A) | 12 Pull Ups | 9 Chest to Bar","- 5 Worm Clean & Jerk","- REST"], tags:["worm","ttb","toes to bar","chest to bar","ctb","pull ups","team","team of 3","team 3"] }
 ];
-

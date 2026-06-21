@@ -32,9 +32,11 @@
 <body>
   <div id="root"></div>
   <script type="text/babel" data-presets="react">
-const { useState, useMemo } = React;
-  <script src="workouts.js"></script>
+const { useState, useMemo, useEffect } = React;
+  <script src="/wod-gen/workouts.js"></script>
   <script type="text/babel" data-presets="react">
+
+const WARMUP_DB = {
   // Core/Abdomen — siempre disponibles para Parte A
   core: [
     { name: "Hollow Hold", reps: "20\"", bilateral: false },
@@ -481,9 +483,9 @@ function HomeBtn({ icon, label, sub, bg, color, subColor, iconBg, accent, timerB
 }
 
 function Home({ onNav }) {
-  const [subSpacing, setSubSpacing] = React.useState("0.18em");
+  const [subSpacing, setSubSpacing] = useState("0.18em");
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Calculate exact letter-spacing so WOD GENERATOR matches CROSSFIT width
     const measure = (text, fontSize, fontWeight, letterSpacing) => {
       const el = document.createElement("span");
@@ -1472,7 +1474,7 @@ function TimerTraining({ onBack }) {
   const updateInterval = (i, sec) => setIntervals(intervals.map((v,idx)=>idx===i?sec:v));
 
   // Lock orientation to landscape on active (best effort)
-  React.useEffect(() => {
+  useEffect(() => {
     if (phase === "active") {
       try {
         if (screen.orientation && screen.orientation.lock) {
@@ -1485,7 +1487,7 @@ function TimerTraining({ onBack }) {
   }, [phase]);
 
   // Keep screen active during timer (Screen Wake Lock API)
-  React.useEffect(() => {
+  useEffect(() => {
     let wakeLock = null;
     const acquireWakeLock = async () => {
       try {
@@ -1552,7 +1554,7 @@ function TimerTraining({ onBack }) {
   };
 
   // Main tick
-  React.useEffect(() => {
+  useEffect(() => {
     if (!running || phase !== "active" || paused) return;
     intervalRef.current = setInterval(() => {
 
