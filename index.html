@@ -1,1 +1,1940 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="WOD Gen" />
+  <base href="/wod-gen/" />
+  <meta name="theme-color" content="#FFFAFA" />
+  <link rel="manifest" href="/wod-gen/manifest.json" />
+  <link rel="apple-touch-icon" href="/wod-gen/icon.png" />
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html, body { background:#FFFAFA; overscroll-behavior:none; height:100%; width:100%; }
+    #root {
+      min-height: 100vh;
+      min-height: 100dvh;
+      min-height: -webkit-fill-available;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      background: #FFFAFA;
+    }
+    ::-webkit-scrollbar { display:none; }
+    * { -webkit-overflow-scrolling:touch; }
+    input, textarea, select { -webkit-appearance:none; appearance:none; }
+  </style>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="/wod-gen/workouts.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect } = React;
 
+const WARMUP_DB = {
+  // Core/Abdomen — siempre disponibles para Parte A
+  core: [
+    { name: "Hollow Hold", reps: "20\"", bilateral: false },
+    { name: "Hollow Rock", reps: "10", bilateral: false },
+    { name: "Deadbug", reps: "10", bilateral: false },
+    { name: "Plancha", reps: "30\"", bilateral: false },
+    { name: "Plancha Lateral", reps: "20\"+20\"", bilateral: true },
+    { name: "V (posición)", reps: "10", bilateral: false },
+    { name: "Uves Alt", reps: "10", bilateral: false },
+    { name: "Uves Lat", reps: "10+10", bilateral: true },
+    { name: "Hollow Flutter Kicks", reps: "20\"", bilateral: false },
+    { name: "Sit-Ups", reps: "10", bilateral: false },
+    { name: "L-Sit (barra)", reps: "10\"", bilateral: false },
+    { name: "Wipers", reps: "10", bilateral: false },
+    { name: "Copenhagen Plank", reps: "20\"+20\"", bilateral: true },
+    { name: "Mountain Climbers", reps: "10", bilateral: false },
+    { name: "Elbow to Tall Plank", reps: "10", bilateral: false },
+    { name: "Lat Plank Rotations", reps: "10+10", bilateral: true },
+  ],
+  // General — movilidad global
+  general: [
+    { name: "WGS (World Greatest Stretch)", reps: "10", bilateral: false },
+    { name: "Cossack Squat", reps: "10", bilateral: false },
+    { name: "Inchworm to Push-Up", reps: "10", bilateral: false },
+    { name: "Air Squat", reps: "10", bilateral: false },
+    { name: "Glute Bridge", reps: "10", bilateral: false },
+    { name: "Sumo Goodmorning", reps: "10", bilateral: false },
+    { name: "OSEA", reps: "10", bilateral: false },
+    { name: "Side to Side", reps: "10+10", bilateral: true },
+    { name: "Down Ups", reps: "10", bilateral: false },
+    { name: "Jumping Jacks", reps: "10", bilateral: false },
+    { name: "Kangi Squat", reps: "10", bilateral: false },
+  ],
+  // Por tipo de movimiento — Parte B específica
+  snatch: [
+    { name: "OH Squat con Disco", reps: "10", bilateral: false },
+    { name: "Hang Power Snatch (barra ligera)", reps: "10", bilateral: false },
+    { name: "Snatch Balance (barra ligera)", reps: "10", bilateral: false },
+    { name: "Overhead Reverse Lunges", reps: "10+10", bilateral: true },
+    { name: "Bar L-Sit", reps: "10\"", bilateral: false },
+    { name: "WPS Rotations", reps: "10+10", bilateral: true },
+    { name: "Letters Hombro (A-T-Y)", reps: "10+10+10", bilateral: false },
+    { name: "Scap Pulls", reps: "10", bilateral: false },
+    { name: "Power Snatch + OHS (barra ligera)", reps: "3+3", bilateral: false },
+  ],
+  clean: [
+    { name: "Power Clean (barra ligera)", reps: "10", bilateral: false },
+    { name: "Hang Power Clean (barra ligera)", reps: "10", bilateral: false },
+    { name: "Front Squat (barra ligera)", reps: "10", bilateral: false },
+    { name: "Elbow Rotations en rack", reps: "10", bilateral: false },
+    { name: "Scap Pulls", reps: "10", bilateral: false },
+    { name: "Row Ring con pausa", reps: "10", bilateral: false },
+    { name: "Elbow to Tall Plank", reps: "10", bilateral: false },
+    { name: "Power Clean + Push Press (barra ligera)", reps: "3+3", bilateral: false },
+  ],
+  jerk: [
+    { name: "Shoulder Press (barra ligera)", reps: "10", bilateral: false },
+    { name: "Push Press (barra ligera)", reps: "10", bilateral: false },
+    { name: "Push Jerk (barra ligera)", reps: "10", bilateral: false },
+    { name: "Letters Hombro (A-T-Y)", reps: "10+10+10", bilateral: false },
+    { name: "Rotadores Externos Gomas", reps: "10+10", bilateral: true },
+    { name: "Scap Pulls", reps: "10", bilateral: false },
+    { name: "HS Hold (pared)", reps: "20\"", bilateral: false },
+    { name: "Jalón Gomas", reps: "10", bilateral: false },
+  ],
+  squat: [
+    { name: "Air Squat con pausa", reps: "10", bilateral: false },
+    { name: "Cossack Squat", reps: "10+10", bilateral: true },
+    { name: "Glute Bridge", reps: "10", bilateral: false },
+    { name: "Sumo Goodmorning", reps: "10", bilateral: false },
+    { name: "Lunge Reverso", reps: "10+10", bilateral: true },
+    { name: "Front Squat (barra ligera)", reps: "10", bilateral: false },
+    { name: "Box Squat (pausa abajo)", reps: "10", bilateral: false },
+    { name: "Kangi Squat", reps: "10", bilateral: false },
+  ],
+  deadlift: [
+    { name: "Sumo Goodmorning", reps: "10", bilateral: false },
+    { name: "Glute Bridge", reps: "10", bilateral: false },
+    { name: "Superman", reps: "10", bilateral: false },
+    { name: "RDL (barra ligera)", reps: "10", bilateral: false },
+    { name: "Hip Hinge (pausa abajo)", reps: "10", bilateral: false },
+    { name: "Copenhagen Plank", reps: "20\"+20\"", bilateral: true },
+    { name: "Pallof Press", reps: "10+10", bilateral: true },
+  ],
+  hspu: [
+    { name: "HS Hold (pared)", reps: "30\"", bilateral: false },
+    { name: "HS Shoulder Taps (pared)", reps: "10+10", bilateral: true },
+    { name: "Wall Walk", reps: "3", bilateral: false },
+    { name: "Pike Push-Up", reps: "10", bilateral: false },
+    { name: "Letters Hombro (A-T-Y)", reps: "10+10+10", bilateral: false },
+    { name: "Scap Push-Up", reps: "10", bilateral: false },
+    { name: "Push-Up Déficit", reps: "10", bilateral: false },
+  ],
+  "ring mu": [
+    { name: "Ring L-Sit", reps: "10\"", bilateral: false },
+    { name: "Ring L-Ups", reps: "10", bilateral: false },
+    { name: "Ring Support Hold", reps: "20\"", bilateral: false },
+    { name: "Vela-Carpa agrupada", reps: "5", bilateral: false },
+    { name: "Row Ring con pausa", reps: "10", bilateral: false },
+    { name: "Scap Pulls", reps: "10", bilateral: false },
+    { name: "Toes to Ring", reps: "10", bilateral: false },
+  ],
+  "bar mu": [
+    { name: "Scap Pulls", reps: "10", bilateral: false },
+    { name: "Strict Pull-Up", reps: "10", bilateral: false },
+    { name: "Bar L-Sit", reps: "10\"", bilateral: false },
+    { name: "Vela-Carpa agrupada", reps: "5", bilateral: false },
+    { name: "Parabrisas Colgado", reps: "10", bilateral: false },
+    { name: "Chin-over-bar Hold", reps: "10\"", bilateral: false },
+    { name: "Remada + entrada (barra)", reps: "5", bilateral: false },
+  ],
+  "pull up": [
+    { name: "Scap Pulls", reps: "10", bilateral: false },
+    { name: "Chin-over-bar Hold", reps: "10\"", bilateral: false },
+    { name: "Strict Pull-Up (si puede)", reps: "5", bilateral: false },
+    { name: "Row Ring con pausa", reps: "10", bilateral: false },
+    { name: "Jalón Gomas", reps: "10", bilateral: false },
+    { name: "Dorsal Gomas", reps: "10+10", bilateral: true },
+  ],
+  "hs walk": [
+    { name: "HS Hold (pared)", reps: "30\"", bilateral: false },
+    { name: "HS Shoulder Taps (libre)", reps: "10+10", bilateral: true },
+    { name: "Wall Walk", reps: "3", bilateral: false },
+    { name: "Scap Push-Up", reps: "10", bilateral: false },
+    { name: "Wrist Circles", reps: "10+10", bilateral: true },
+    { name: "Letters Hombro (A-T-Y)", reps: "10+10+10", bilateral: false },
+  ],
+  "t2bar": [
+    { name: "Strict T2Bar", reps: "5", bilateral: false },
+    { name: "Parabrisas Colgado", reps: "10", bilateral: false },
+    { name: "Bar L-Sit", reps: "10\"", bilateral: false },
+    { name: "Scap Pulls", reps: "10", bilateral: false },
+    { name: "Hollow Rock", reps: "10", bilateral: false },
+    { name: "Wipers colgado", reps: "10", bilateral: false },
+  ],
+  "c2bar": [
+    { name: "Scap Pulls", reps: "10", bilateral: false },
+    { name: "Chin-over-bar Hold", reps: "10\"", bilateral: false },
+    { name: "Dorsal Gomas", reps: "10+10", bilateral: true },
+    { name: "Row Ring con pausa", reps: "10", bilateral: false },
+    { name: "Parabrisas Colgado", reps: "10", bilateral: false },
+  ],
+  run: [
+    { name: "Lunge Reverso", reps: "10+10", bilateral: true },
+    { name: "Glute Bridge", reps: "10", bilateral: false },
+    { name: "Cossack Squat", reps: "10+10", bilateral: true },
+    { name: "Hip Flexor Stretch dinámico", reps: "10+10", bilateral: true },
+    { name: "Jumping Jacks", reps: "10", bilateral: false },
+    { name: "Down Ups", reps: "10", bilateral: false },
+    { name: "Ankle Circles", reps: "10+10", bilateral: true },
+  ],
+  row: [
+    { name: "Row Ring con pausa", reps: "10", bilateral: false },
+    { name: "Dorsal Gomas", reps: "10+10", bilateral: true },
+    { name: "Scap Pulls", reps: "10", bilateral: false },
+    { name: "Sumo Goodmorning", reps: "10", bilateral: false },
+    { name: "Glute Bridge", reps: "10", bilateral: false },
+    { name: "Inchworm to Push-Up", reps: "10", bilateral: false },
+  ],
+  bike: [
+    { name: "Air Squat con pausa", reps: "10", bilateral: false },
+    { name: "Glute Bridge", reps: "10", bilateral: false },
+    { name: "Lunge Reverso", reps: "10+10", bilateral: true },
+    { name: "Hip Flexor Stretch dinámico", reps: "10+10", bilateral: true },
+    { name: "Jumping Jacks", reps: "10", bilateral: false },
+    { name: "Cossack Squat", reps: "10+10", bilateral: true },
+  ],
+  thruster: [
+    { name: "Air Squat con pausa", reps: "10", bilateral: false },
+    { name: "Push Press (barra ligera)", reps: "10", bilateral: false },
+    { name: "Front Squat (barra ligera)", reps: "10", bilateral: false },
+    { name: "Overhead Squat (barra ligera)", reps: "10", bilateral: false },
+    { name: "Scap Push-Up", reps: "10", bilateral: false },
+    { name: "Letters Hombro (A-T-Y)", reps: "10+10+10", bilateral: false },
+  ],
+  "wall ball": [
+    { name: "Air Squat con pausa", reps: "10", bilateral: false },
+    { name: "Glute Bridge", reps: "10", bilateral: false },
+    { name: "Push Press (barra ligera)", reps: "10", bilateral: false },
+    { name: "Sumo Goodmorning", reps: "10", bilateral: false },
+    { name: "Overhead Squat (barra ligera)", reps: "10", bilateral: false },
+  ],
+  "bench press": [
+    { name: "Scap Push-Up", reps: "10", bilateral: false },
+    { name: "Push-Up con pausa", reps: "10", bilateral: false },
+    { name: "Rotadores Externos Gomas", reps: "10+10", bilateral: true },
+    { name: "Letters Hombro (A-T-Y)", reps: "10+10+10", bilateral: false },
+    { name: "Jalón Gomas", reps: "10", bilateral: false },
+  ],
+  "ring dips": [
+    { name: "Ring Support Hold", reps: "20\"", bilateral: false },
+    { name: "Push-Up con pausa", reps: "10", bilateral: false },
+    { name: "Scap Push-Up", reps: "10", bilateral: false },
+    { name: "Dip Hold (paralelas)", reps: "20\"", bilateral: false },
+    { name: "Tricep Push-Down Gomas", reps: "10", bilateral: false },
+  ],
+  endurance: [
+    { name: "Jumping Jacks", reps: "10", bilateral: false },
+    { name: "Down Ups", reps: "10", bilateral: false },
+    { name: "Lunge Reverso", reps: "10+10", bilateral: true },
+    { name: "Glute Bridge", reps: "10", bilateral: false },
+    { name: "Inchworm to Push-Up", reps: "10", bilateral: false },
+    { name: "Air Squat con pausa", reps: "10", bilateral: false },
+    { name: "GTOH (con disco)", reps: "10", bilateral: false },
+  ],
+  hyrox: [
+    { name: "Lunge Reverso", reps: "10+10", bilateral: true },
+    { name: "Glute Bridge", reps: "10", bilateral: false },
+    { name: "GTOH (con disco)", reps: "10", bilateral: false },
+    { name: "Sled Mimicry (sin trineo)", reps: "10", bilateral: false },
+    { name: "Wall Ball Squat (ligero)", reps: "10", bilateral: false },
+    { name: "Inchworm to Push-Up", reps: "10", bilateral: false },
+  ],
+};
+
+
+const WARMUP_KEYWORDS = {
+  snatch:"snatch","hang snatch":"snatch","power snatch":"snatch","squat snatch":"snatch","full snatch":"snatch",
+  clean:"clean","power clean":"clean","hang clean":"clean","squat clean":"clean",
+  jerk:"jerk","push jerk":"jerk","split jerk":"jerk","push press":"jerk",
+  squat:"squat","back squat":"squat","front squat":"squat","oh squat":"squat",
+  deadlift:"deadlift","peso muerto":"deadlift","dl":"deadlift",
+  hspu:"hspu","handstand push":"hspu",
+  "ring mu":"ring mu","ring muscle":"ring mu","rmu":"ring mu",
+  "bar mu":"bar mu","bar muscle":"bar mu",
+  "pull up":"pull up","c2bar":"c2bar","chest to bar":"c2bar",
+  "hs walk":"hs walk","handstand walk":"hs walk",
+  "t2bar":"t2bar","toes to bar":"t2bar","ttb":"t2bar",
+  run:"run",row:"row",bike:"bike","assault bike":"bike",
+  thruster:"thruster","wall ball":"wall ball","bench press":"bench press",
+  "ring dips":"ring dips",endurance:"endurance",hyrox:"hyrox",
+};
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const STORAGE_KEY = "cwg_custom_v2";
+const loadCustom = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]"); } catch { return []; } };
+const saveCustom = (d) => { try { localStorage.setItem(STORAGE_KEY,JSON.stringify(d)); } catch {} };
+
+function pickRandom(arr, n, exclude=[]) {
+  const pool = arr.filter(e => !exclude.find(x => x.name===e.name));
+  return [...pool].sort(()=>Math.random()-0.5).slice(0,n);
+}
+
+function generateWarmup(keywords) {
+  const kws = keywords.toLowerCase().split(/\s+/);
+  const detected = [...new Set(kws.map(k => {
+    for (const [key,val] of Object.entries(WARMUP_KEYWORDS)) {
+      if (k.includes(key)||key.includes(k)) return val;
+    }
+    return null;
+  }).filter(Boolean))];
+  const specificPool = detected.flatMap(d => WARMUP_DB[d]||[]);
+  const uniqueSpecific = [...new Map(specificPool.map(e=>[e.name,e])).values()];
+  const coreExs = pickRandom(WARMUP_DB.core, 2);
+  const generalPool = [...WARMUP_DB.general, ...uniqueSpecific.filter(e=>!WARMUP_DB.core.find(c=>c.name===e.name))];
+  const generalExs = pickRandom(generalPool, 2, coreExs);
+  const partA = [...coreExs,...generalExs].sort(()=>Math.random()-0.5);
+  const partB = pickRandom(
+    uniqueSpecific.length>=3 ? uniqueSpecific : [...uniqueSpecific,...WARMUP_DB.general],
+    3, partA
+  );
+  return { partA, partB, detected };
+}
+
+function getByKeywords(cat, keywords) {
+  const kws = keywords.toLowerCase().split(/[\s,]+/).filter(Boolean);
+  const pool = WORKOUTS.filter(w => {
+    if (w.cat!==cat) return false;
+    const text = [w.label,...w.ejercicios,...w.tags].join(" ").toLowerCase();
+    return kws.some(k=>text.includes(k));
+  });
+  return pool.length>0 ? pool : WORKOUTS.filter(w=>w.cat===cat);
+}
+
+function pickOne(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+function generateBlock(cat, keywords) {
+  if (cat==="WARMUP") return { cat, ...generateWarmup(keywords) };
+  return { cat, workout: pickOne(getByKeywords(cat, keywords)) };
+}
+
+// ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
+const T = {
+  bg:"#FFFAFA", surface:"#F5EFEA", surface2:"#EDE5DF",
+  border:"#E8DDD7", border2:"#D4C8C0",
+  text:"#312F2F", muted:"#9A8880", dim:"#BFA095",
+  sandy:"#F8A163", taupe:"#BFA095", petal:"#DECEC5", graphite:"#312F2F",
+  green:"#7A9E8A", red:"#C4776A", blue:"#7A8E9E", purple:"#9A8880",
+  font:"-apple-system,'SF Pro Display','SF Pro Text',BlinkMacSystemFont,sans-serif",
+};
+
+const CAT_META = {
+  WARMUP:    { label:"Warm Up",           color:"#7A9E8A", bg:"#7A9E8A18", icon:"🔥" },
+  STRENGTH:  { label:"Strength & Skills", color:"#F8A163", bg:"#F8A16318", icon:"💪" },
+  WOD:       { label:"WOD / Metcon",      color:"#C4776A", bg:"#C4776A18", icon:"⏱️" },
+  TEAMWOD:   { label:"Team WOD",          color:"#9A8880", bg:"#9A888018", icon:"🤝" },
+  ENDURANCE: { label:"Endurance",         color:"#7A8E9E", bg:"#7A8E9E18", icon:"🫀" },
+};
+
+const ALL_CATS = ["WARMUP","STRENGTH","WOD","TEAMWOD","ENDURANCE"];
+const BLOCK_CATS = ["WARMUP","STRENGTH","WOD","TEAMWOD","ENDURANCE"];
+
+// ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
+function PageHeader({ title, sub, onBack }) {
+  return (
+    <div style={{ display:"flex", alignItems:"center", padding:"14px 20px", borderBottom:`1px solid ${T.border}`, position:"sticky", top:0, background:T.bg, zIndex:100 }}>
+      <button onClick={onBack} style={{ background:"none", border:"none", color:T.sandy, fontSize:17, fontWeight:500, cursor:"pointer", fontFamily:T.font, padding:"4px 0", minWidth:60 }}>
+        ‹ Volver
+      </button>
+      <div style={{ flex:1, textAlign:"center" }}>
+        <div style={{ fontSize:17, fontWeight:600, color:T.text, letterSpacing:"-0.3px" }}>{title}</div>
+        {sub && <div style={{ fontSize:11, color:T.muted, marginTop:1 }}>{sub}</div>}
+      </div>
+      <div style={{ minWidth:60 }} />
+    </div>
+  );
+}
+
+function SectionLabel({ num, children }) {
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+      {num && <div style={{ width:20, height:20, borderRadius:"50%", background:T.graphite, color:T.bg, fontSize:10, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{num}</div>}
+      <span style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase" }}>{children}</span>
+    </div>
+  );
+}
+
+function AppInput({ value, onChange, onKeyDown, placeholder, autoFocus }) {
+  return (
+    <input style={{ width:"100%", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, padding:"14px 16px", fontSize:15, color:T.text, fontFamily:T.font, outline:"none", boxSizing:"border-box" }}
+      value={value} onChange={onChange} onKeyDown={onKeyDown} placeholder={placeholder} autoFocus={autoFocus} />
+  );
+}
+
+function AppTextarea({ value, onChange, placeholder, rows=6 }) {
+  return (
+    <textarea style={{ width:"100%", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, padding:"14px 16px", fontSize:15, color:T.text, fontFamily:T.font, outline:"none", boxSizing:"border-box", resize:"vertical", lineHeight:1.7, minHeight:120 }}
+      value={value} onChange={onChange} placeholder={placeholder} rows={rows} />
+  );
+}
+
+function AppSelect({ value, onChange, children }) {
+  return (
+    <select style={{ width:"100%", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, padding:"14px 16px", fontSize:15, color:T.text, fontFamily:T.font, outline:"none", boxSizing:"border-box" }}
+      value={value} onChange={onChange}>{children}</select>
+  );
+}
+
+function CatBadge({ cat }) {
+  const m = CAT_META[cat]; if (!m) return null;
+  return <span style={{ fontSize:10, fontWeight:600, letterSpacing:"0.05em", padding:"3px 10px", borderRadius:20, background:m.bg, color:m.color }}>{m.icon} {m.label}</span>;
+}
+
+function WorkoutCard({ workout, keyword="" }) {
+  const kws = keyword.toLowerCase().split(/[\s,]+/).filter(Boolean);
+  const highlight = (text) => {
+    if (!kws.length) return text;
+    let parts = [text];
+    kws.forEach(kw => {
+      parts = parts.flatMap(p => {
+        if (typeof p !== "string") return [p];
+        const re = new RegExp(`(${kw.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")})`, "gi");
+        return p.split(re).map((s,i) => re.test(s) ? <mark key={i} style={{ background:`${T.sandy}33`, color:T.sandy, fontWeight:600, borderRadius:3, padding:"0 2px" }}>{s}</mark> : s);
+      });
+    });
+    return parts;
+  };
+  return (
+    <div style={{ background:T.bg, border:`1px solid ${T.border}`, borderRadius:16, overflow:"hidden", marginBottom:12 }}>
+      <div style={{ padding:"12px 16px", borderBottom:`1px solid ${T.border}`, background:T.surface }}>
+        <CatBadge cat={workout.cat} />
+      </div>
+      <div style={{ padding:"14px 16px" }}>
+        <div style={{ fontSize:15, fontWeight:600, color:T.text, marginBottom:12, letterSpacing:"-0.2px" }}>{highlight(workout.label)}</div>
+        {workout.ejercicios.map((ej,i) => {
+          const isH = ej.endsWith(":");
+          return <div key={i} style={{ fontSize:isH?10:13, color:isH?T.muted:T.text, fontWeight:isH?600:400, letterSpacing:isH?"0.08em":0, textTransform:isH?"uppercase":"none", padding:"4px 0", lineHeight:1.6, borderBottom:i<workout.ejercicios.length-1?`1px solid ${T.border}`:"none" }}>{isH?ej:`— ${highlight(ej)}`}</div>;
+        })}
+        {workout.tags?.length>0 && (
+          <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginTop:12, paddingTop:12, borderTop:`1px solid ${T.border}` }}>
+            {workout.tags.map(t=><span key={t} style={{ fontSize:10, padding:"4px 10px", borderRadius:20, border:`1px solid ${T.border}`, color:T.muted }}>{t}</span>)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SharePanel({ text }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => { navigator.clipboard.writeText(text).then(()=>{ setCopied(true); setTimeout(()=>setCopied(false),2000); }); };
+  return (
+    <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", marginTop:8 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 14px", borderBottom:`1px solid ${T.border}` }}>
+        <span style={{ fontSize:11, color:T.muted }}>Copia y comparte donde quieras</span>
+        <button onClick={copy} style={{ background:copied?`${T.green}22`:T.petal, border:`1px solid ${copied?T.green:T.border2}`, color:copied?T.green:T.taupe, borderRadius:20, fontSize:11, fontWeight:600, padding:"5px 12px", cursor:"pointer", fontFamily:T.font }}>{copied?"✓ Copiado":"Copiar"}</button>
+      </div>
+      <pre style={{ margin:0, padding:"12px 14px", fontSize:11, color:T.muted, whiteSpace:"pre-wrap", wordBreak:"break-word", lineHeight:1.7, fontFamily:T.font }}>{text}</pre>
+    </div>
+  );
+}
+
+function ShareBlock({ text }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ marginTop:8 }}>
+      <button onClick={()=>setOpen(v=>!v)} style={{ width:"100%", padding:"15px", background:"transparent", border:`1px solid ${T.border2}`, borderRadius:14, fontSize:13, fontWeight:500, color:T.taupe, cursor:"pointer", fontFamily:T.font }}>
+        {open?"✕ Cerrar":"📤 Compartir entrenamiento"}
+      </button>
+      {open && <SharePanel text={text} />}
+    </div>
+  );
+}
+
+function buildShareText(blocks) {
+  return `⚡ CROSSFIT WOD GENERATOR\n${"─".repeat(32)}\n\n`+blocks.map((b,i)=>{
+    const m=CAT_META[b.cat]; let t=`BLOQUE ${i+1} — ${m.icon} ${m.label.toUpperCase()}\n`;
+    if(b.cat==="WARMUP"){
+      t+=`3 Rondas — Parte A:\n`; b.partA.forEach(e=>{t+=`  ${e.reps} ${e.name}\n`;});
+      t+=`3 Rondas — Parte B:\n`; b.partB.forEach(e=>{t+=`  ${e.reps} ${e.name}\n`;});
+    } else if(b.workout){ t+=`${b.workout.label}\n`; b.workout.ejercicios.forEach(e=>{t+=`  ${e}\n`;}); }
+    return t;
+  }).join("\n")+`\n${"─".repeat(32)}`;
+}
+
+function buildShareTextSingle(w) {
+  const m=CAT_META[w.cat];
+  return `⚡ CROSSFIT WOD GENERATOR\n${"─".repeat(32)}\n\n${m.icon} ${m.label.toUpperCase()}\n${w.label}\n${w.ejercicios.map(e=>`  ${e}`).join("\n")}\n\n${"─".repeat(32)}`;
+}
+
+// ─── HOME ─────────────────────────────────────────────────────────────────────
+function HomeBtn({ icon, label, sub, bg, color, subColor, iconBg, accent, timerBorder, onClick }) {
+  return (
+    <button onClick={onClick} style={{ width:"100%", padding:"18px 20px", background:bg, border:timerBorder?`1px solid rgba(248,161,99,0.35)`:(bg===T.surface?`1px solid ${T.border}`:"none"), borderRadius:18, cursor:"pointer", textAlign:"left", fontFamily:T.font, display:"flex", alignItems:"center", gap:14, position:"relative", overflow:"hidden" }}>
+      {accent && <div style={{ position:"absolute", left:0, top:0, bottom:0, width:3, background:accent, borderRadius:"3px 0 0 3px" }} />}
+      <div style={{ width:46, height:46, borderRadius:13, background:iconBg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0, color:T.sandy }}>{icon}</div>
+      <div style={{ flex:1 }}>
+        <div style={{ fontSize:15, fontWeight:600, color, letterSpacing:"-0.2px", marginBottom:2 }}>{label}</div>
+        <div style={{ fontSize:12, color:subColor, fontWeight:400 }}>{sub}</div>
+      </div>
+      <div style={{ fontSize:18, color:subColor, opacity:0.5 }}>›</div>
+    </button>
+  );
+}
+
+function Home({ onNav }) {
+  const [subSpacing, setSubSpacing] = useState("0.18em");
+
+  useEffect(() => {
+    // Calculate exact letter-spacing so WOD GENERATOR matches CROSSFIT width
+    const measure = (text, fontSize, fontWeight, letterSpacing) => {
+      const el = document.createElement("span");
+      el.style.cssText = `position:absolute;visibility:hidden;white-space:nowrap;font-family:-apple-system,'SF Pro Display',BlinkMacSystemFont,sans-serif;font-size:${fontSize};font-weight:${fontWeight};letter-spacing:${letterSpacing};`;
+      el.textContent = text;
+      document.body.appendChild(el);
+      const w = el.getBoundingClientRect().width;
+      document.body.removeChild(el);
+      return w;
+    };
+
+    const cfWidth  = measure("CROSSFIT",    "36px", "700", "-1px");
+    const subWidth = measure("WOD GENERATOR","13px", "300", "0px");
+    const numGaps  = "WOD GENERATOR".length - 1;
+    const extraPerGap = (cfWidth - subWidth) / numGaps;
+    setSubSpacing(extraPerGap + "px");
+  }, []);
+
+  return (
+    <div style={{
+      height:"100vh", height:"100dvh",
+      background:T.bg, color:T.text, fontFamily:T.font,
+      display:"flex", flexDirection:"column",
+      overflow:"hidden",
+    }}>
+      {/* Brand */}
+      <div style={{ padding:"20px 24px 16px", borderBottom:`1px solid ${T.border}`, flexShrink:0 }}>
+        <div style={{ fontSize:36, fontWeight:700, color:T.text, letterSpacing:"-1px", lineHeight:1 }}>CROSSFIT</div>
+        <div style={{ fontSize:13, fontWeight:300, color:T.muted, letterSpacing:subSpacing, marginTop:4 }}>WOD GENERATOR</div>
+      </div>
+
+      {/* Question */}
+      <div style={{ padding:"18px 24px 0", flexShrink:0 }}>
+        <div style={{ fontSize:22, fontWeight:300, color:T.muted, letterSpacing:"-0.3px", lineHeight:1.3 }}>
+          ¿Qué mejoramos <span style={{ fontWeight:500, color:T.taupe }}>hoy?</span>
+        </div>
+      </div>
+
+      {/* Buttons */}
+      <div style={{ flex:1, display:"flex", flexDirection:"column", justifyContent:"center", padding:"0 24px", gap:12 }}>
+        <HomeBtn icon="■" label="TRAINING" sub="Create · Search · Add" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("training")} />
+        <HomeBtn icon="◐" label="TIMER" sub="UP/DOWN · Intervalos" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("timer")} />
+        <HomeBtn icon="⇄" label="UNIT CONVERTER" sub="kg · lb · m · ft" bg={T.surface} color={T.text} subColor={T.muted} iconBg={`${T.sandy}18`} accent={null} onClick={()=>onNav("converter")} />
+      </div>
+
+      {/* Bottom safe area */}
+      <div style={{ paddingBottom:"max(20px, env(safe-area-inset-bottom))", flexShrink:0 }} />
+    </div>
+  );
+}
+
+// ─── TRAINING MENU ───────────────────────────────────────────────────────────
+function TrainingMenu({ onNav, onBack }) {
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
+      <PageHeader title="TRAINING" onBack={onBack} />
+      <div style={{ padding:"20px 20px 40px" }}>
+        <button onClick={()=>onNav("create")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.snow, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", marginBottom:10, fontFamily:T.font }}>
+          <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>✦</div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>CREATE</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Genera tu sesión completa</div></div>
+          <div style={{ fontSize:16, opacity:0.35, color:T.muted }}>›</div>
+        </button>
+
+        <button onClick={()=>onNav("search-menu")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.snow, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", marginBottom:10, fontFamily:T.font }}>
+          <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>◈</div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>SEARCH</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Base de datos · Oficiales</div></div>
+          <div style={{ fontSize:16, opacity:0.35, color:T.muted }}>›</div>
+        </button>
+
+        <button onClick={()=>onNav("add")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.snow, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", fontFamily:T.font }}>
+          <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>＋</div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>ADD</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Tus entrenamientos personalizados</div></div>
+          <div style={{ fontSize:16, opacity:0.35, color:T.muted }}>›</div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── SEARCH MENU ─────────────────────────────────────────────────────────────
+function SearchMenu({ onNav, onBack }) {
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
+      <PageHeader title="SEARCH" onBack={onBack} />
+      <div style={{ padding:"20px 20px 40px" }}>
+        <button onClick={()=>onNav("search")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.snow, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", marginBottom:10, fontFamily:T.font }}>
+          <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>◊</div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>DATABASE</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>507 entrenamientos disponibles</div></div>
+          <div style={{ fontSize:16, opacity:0.35, color:T.muted }}>›</div>
+        </button>
+
+        <button onClick={()=>onNav("officials-menu")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.snow, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", fontFamily:T.font }}>
+          <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>◆</div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>OFFICIAL</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>Open Games · Competitions</div></div>
+          <div style={{ fontSize:16, opacity:0.35, color:T.muted }}>›</div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── OFFICIALS MENU ──────────────────────────────────────────────────────────
+function OfficialsMenu({ onNav, onBack }) {
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
+      <PageHeader title="OFFICIAL" onBack={onBack} />
+      <div style={{ padding:"20px 20px 40px" }}>
+        <button onClick={() => onNav('openGames-years')} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.surface2, textAlign:"left", position:"relative", overflow:"hidden", cursor:"pointer", transition:"all 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = T.surface} onMouseLeave={(e) => e.currentTarget.style.background = T.surface2}>
+          <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>⬡</div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>Open Games</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>2011-2026 • 73 WODs</div></div>
+          <div style={{ fontSize:16, color:T.sandy }}>›</div>
+        </button>
+        <div style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:14, border:`1px solid ${T.border}`, background:T.surface2, textAlign:"left", position:"relative", overflow:"hidden", opacity:0.5, marginTop:10 }}>
+          <div style={{ width:40, height:40, borderRadius:10, background:`rgba(248,161,99,0.1)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, color:T.sandy }}>▲</div>
+          <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600, color:T.text }}>Competitions</div><div style={{ fontSize:11, color:T.muted, marginTop:2 }}>A falta de información</div></div>
+          <div style={{ fontSize:16, opacity:0.35, color:T.muted }}>›</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CREATE TRAINING ──────────────────────────────────────────────────────────
+function WarmupBlockDisplay({ warmup }) {
+  return (
+    <div>
+      <div style={{ marginBottom:14 }}>
+        <div style={{ fontSize:10, fontWeight:600, letterSpacing:"0.1em", color:"#7A9E8A", marginBottom:8, textTransform:"uppercase" }}>Parte A — General · 3 Rondas</div>
+        {warmup.partA.map((ex,i)=><div key={i} style={{ display:"flex", gap:12, padding:"5px 0", borderBottom:`1px solid ${T.border}` }}><span style={{ fontSize:12, fontWeight:600, color:T.sandy, minWidth:44 }}>{ex.reps}</span><span style={{ fontSize:13, color:T.text }}>{ex.name}</span></div>)}
+      </div>
+      <div>
+        <div style={{ fontSize:10, fontWeight:600, letterSpacing:"0.1em", color:T.sandy, marginBottom:8, textTransform:"uppercase" }}>Parte B — Específico · 3 Rondas</div>
+        {warmup.partB.map((ex,i)=><div key={i} style={{ display:"flex", gap:12, padding:"5px 0", borderBottom:`1px solid ${T.border}` }}><span style={{ fontSize:12, fontWeight:600, color:T.sandy, minWidth:44 }}>{ex.reps}</span><span style={{ fontSize:13, color:T.text }}>{ex.name}</span></div>)}
+      </div>
+    </div>
+  );
+}
+
+function WorkoutBlockDisplay({ workout }) {
+  if (!workout) return <p style={{ color:T.muted, fontSize:12 }}>No se encontró entrenamiento.</p>;
+  return (
+    <div>
+      <div style={{ fontSize:14, fontWeight:600, color:T.text, marginBottom:10, letterSpacing:"-0.2px" }}>{workout.label}</div>
+      {workout.ejercicios.map((ej,i)=>{
+        const isH=ej.endsWith(":");
+        return <div key={i} style={{ fontSize:isH?10:13, color:isH?T.muted:T.text, fontWeight:isH?600:400, letterSpacing:isH?"0.08em":0, textTransform:isH?"uppercase":"none", padding:"4px 0", lineHeight:1.7, borderBottom:`1px solid ${T.border}` }}>{isH?ej:`— ${ej}`}</div>;
+      })}
+      {workout.tags?.length>0 && <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginTop:10, paddingTop:10, borderTop:`1px solid ${T.border}` }}>{workout.tags.map(t=><span key={t} style={{ fontSize:10, padding:"3px 10px", borderRadius:20, border:`1px solid ${T.border}`, color:T.muted }}>{t}</span>)}</div>}
+    </div>
+  );
+}
+
+function CreatedBlock({ index, block, onRegenerate }) {
+  const m = CAT_META[block.cat];
+  return (
+    <div style={{ border:`1px solid ${T.border}`, borderRadius:16, overflow:"hidden", marginBottom:12 }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", borderBottom:`1px solid ${T.border}`, background:T.surface }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <CatBadge cat={block.cat} />
+          <span style={{ fontSize:11, color:T.muted }}>Bloque {index+1}</span>
+        </div>
+        <button onClick={onRegenerate} style={{ background:T.petal, border:"none", borderRadius:20, fontSize:11, fontWeight:600, color:T.taupe, padding:"5px 12px", cursor:"pointer", fontFamily:T.font }}>🔀 Regenerar</button>
+      </div>
+      <div style={{ padding:"14px 16px", background:T.bg }}>
+        {block.cat==="WARMUP" ? <WarmupBlockDisplay warmup={block} /> : <WorkoutBlockDisplay workout={block.workout} />}
+      </div>
+    </div>
+  );
+}
+
+function CreateTraining({ onBack }) {
+  const [keywords, setKeywords] = useState("");
+  const [numBlocks, setNumBlocks] = useState(3);
+  const [blockCats, setBlockCats] = useState(["WARMUP","STRENGTH","WOD"]);
+  const [generated, setGenerated] = useState(null);
+  const [step, setStep] = useState("config");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [typeModalOpen, setTypeModalOpen] = useState(null);
+
+  // Ejercicios para sugerencias
+  const EXERCISE_SUGGESTIONS = ["snatch","arrancada","power snatch","ps","p.snatch","arrancada fuerza","psnatch","squat snatch","full snatch","clean","cargada","c","pclean","pc","power clean","cargada fuerza","squat clean","jerk","j","push jerk","pj","pjerk","split jerk","thruster","deadlift","dl","dlift","ttb","toes to bar","toes2bar","toes bar","chest to bar","ctb","pull up","pup","bmu","muscle up","bar muscle up","rmu","ring muscle up","handstand push up","hspu","push press","ppress","pp","box jump","bj","bjump","burpee","double under","du","wall ball","wb","row","remo","bike","bike erg","erg","assault","bici","bike ass","run","correr","rope","cuerda","dumbbell","mancuerna","mancuernas","kettlebell","kettle","kb","squat","sentadilla","front squat","front","sentadilla frontal","back squat","back","sentadilla trasera","hs walk","handstand walk","hacer el pino","andar con las manos","wall walk","wall climb","wwalk","wclimb","hs hold","handstand hold"];
+
+  const handleNumChange = (n) => {
+    setNumBlocks(n);
+    setBlockCats(prev => { const next=[...prev]; while(next.length<n) next.push("WOD"); return next.slice(0,n); });
+  };
+
+  const handleGenerate = () => { setGenerated(blockCats.map(cat=>generateBlock(cat,keywords))); setStep("result"); };
+  const regenerate = (i) => setGenerated(prev => { const n=[...prev]; n[i]=generateBlock(blockCats[i],keywords); return n; });
+
+  // Filter suggestions based on input
+  const filteredSuggestions = keywords.trim().length > 0 
+    ? EXERCISE_SUGGESTIONS.filter(s => s.toLowerCase().includes(keywords.toLowerCase()))
+    : [];
+
+  const addSuggestion = (suggestion) => {
+    setKeywords(suggestion);
+    setShowSuggestions(false);
+  };
+
+  const selectBlockType = (blockIndex, cat) => {
+    const n = [...blockCats];
+    n[blockIndex] = cat;
+    setBlockCats(n);
+    setTypeModalOpen(null);
+  };
+
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
+      <PageHeader title="CREATE" sub="Genera tu sesión" onBack={onBack} />
+      <div style={{ padding:"24px 20px 60px" }}>
+        {step==="config" && (
+          <>
+            {/* SECTION 1: EJERCICIOS CON SUGERENCIAS */}
+            <div style={{ marginBottom:28 }}>
+              <SectionLabel num="1">Ejercicios a entrenar</SectionLabel>
+              <div style={{ position:"relative" }}>
+                <AppInput 
+                  value={keywords} 
+                  onChange={e => { setKeywords(e.target.value); setShowSuggestions(true); }} 
+                  onFocus={() => keywords.trim().length > 0 && setShowSuggestions(true)}
+                  placeholder="snatch, t2bar, squat clean, rope..." 
+                />
+                {showSuggestions && filteredSuggestions.length > 0 && (
+                  <div style={{
+                    position:"absolute",
+                    top:"100%",
+                    left:0,
+                    right:0,
+                    background:"white",
+                    border:`1px solid ${T.border}`,
+                    borderTop:"none",
+                    borderRadius:"0 0 10px 10px",
+                    maxHeight:"200px",
+                    overflowY:"auto",
+                    zIndex:10,
+                    marginTop:"-4px",
+                    boxShadow:"0 4px 12px rgba(0,0,0,0.1)"
+                  }}>
+                    {filteredSuggestions.map(suggestion => (
+                      <div
+                        key={suggestion}
+                        onClick={() => addSuggestion(suggestion)}
+                        style={{
+                          padding:"10px 14px",
+                          borderBottom:`1px solid ${T.border2}`,
+                          cursor:"pointer",
+                          fontSize:13,
+                          color:T.text,
+                          transition:"all 0.2s"
+                        }}
+                        onMouseEnter={e => e.target.style.background = T.surface}
+                        onMouseLeave={e => e.target.style.background = "white"}
+                      >
+                        <span style={{color:T.sandy, fontWeight:600}}>{suggestion}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ fontSize:11, color:T.muted, marginTop:6, paddingLeft:4 }}>Varios ejercicios separados por coma</div>
+            </div>
+
+            {/* SECTION 2: NÚMERO DE BLOQUES */}
+            <div style={{ marginBottom:28 }}>
+              <SectionLabel num="2">Número de bloques</SectionLabel>
+              <div style={{ display:"flex", gap:8 }}>
+                {[1,2,3,4,5].map(n=>(
+                  <button key={n} onClick={()=>handleNumChange(n)} style={{ flex:1, padding:"12px 8px", borderRadius:12, border:`1px solid ${numBlocks===n?T.graphite:T.border}`, background:numBlocks===n?T.graphite:T.surface, color:numBlocks===n?T.bg:T.muted, fontSize:16, fontWeight:600, cursor:"pointer", fontFamily:T.font }}>{n}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* SECTION 3: TIPO DE CADA BLOQUE CON DROPDOWNS */}
+            <div style={{ marginBottom:32 }}>
+              <SectionLabel num="3">Tipo de cada bloque</SectionLabel>
+              {Array.from({length:numBlocks}).map((_,i)=>{
+                const m = CAT_META[blockCats[i]];
+                return (
+                  <div key={i} style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:11, color:T.muted, fontWeight:600, letterSpacing:"0.05em", marginBottom:8 }}>BLOQUE {i+1}</div>
+                    <button 
+                      onClick={() => setTypeModalOpen(i)}
+                      style={{
+                        width:"100%",
+                        padding:"10px 12px",
+                        border:`1px solid ${T.border}`,
+                        borderRadius:10,
+                        background:T.surface,
+                        fontSize:12,
+                        fontWeight:500,
+                        color:T.text,
+                        cursor:"pointer",
+                        fontFamily:T.font,
+                        display:"flex",
+                        alignItems:"center",
+                        justifyContent:"space-between"
+                      }}
+                    >
+                      <span>{m.icon} {m.label}</span>
+                      <span style={{color:T.muted}}>‣</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* GENERAR BUTTON */}
+            <button onClick={handleGenerate} style={{ width:"100%", padding:"17px 20px", background:T.graphite, color:T.bg, border:"none", borderRadius:16, fontSize:15, fontWeight:600, cursor:"pointer", fontFamily:T.font, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <span>Generar Training</span><span style={{ fontSize:18, opacity:0.5 }}>›</span>
+            </button>
+
+            {/* TYPE MODAL */}
+            {typeModalOpen !== null && (
+              <div 
+                style={{
+                  position:"fixed",
+                  top:0,
+                  left:0,
+                  right:0,
+                  bottom:0,
+                  background:"rgba(0,0,0,0.5)",
+                  zIndex:100,
+                  display:"flex",
+                  alignItems:"flex-end"
+                }}
+                onClick={() => setTypeModalOpen(null)}
+              >
+                <div 
+                  style={{
+                    background:"white",
+                    width:"100%",
+                    borderRadius:"20px 20px 0 0",
+                    padding:"20px",
+                    animation:"slideUp 0.3s ease-out"
+                  }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div style={{fontSize:14, fontWeight:600, color:T.text, marginBottom:12}}>Selecciona el tipo para Bloque {typeModalOpen + 1}</div>
+                  
+                  {BLOCK_CATS.map(cat => {
+                    const m = CAT_META[cat];
+                    const isActive = blockCats[typeModalOpen] === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => selectBlockType(typeModalOpen, cat)}
+                        style={{
+                          width:"100%",
+                          padding:"11px 12px",
+                          border:`1px solid ${T.border}`,
+                          borderRadius:10,
+                          marginBottom:8,
+                          cursor:"pointer",
+                          background:isActive?T.sandy:"#F5EFEA",
+                          color:isActive?"white":T.text,
+                          fontWeight:500,
+                          fontSize:12,
+                          fontFamily:T.font,
+                          transition:"all 0.2s",
+                          display:"flex",
+                          alignItems:"center",
+                          gap:8
+                        }}
+                      >
+                        <span>{m.icon}</span>
+                        <span>{m.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <style>{`
+              @keyframes slideUp {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+              }
+            `}</style>
+          </>
+        )}
+        {step==="result" && generated && (
+          <>
+            <div style={{ display:"flex", gap:8, marginBottom:20 }}>
+              <button onClick={()=>setStep("config")} style={{ flex:1, padding:"12px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, fontSize:13, fontWeight:500, color:T.muted, cursor:"pointer", fontFamily:T.font }}>← Editar</button>
+              <button onClick={handleGenerate} style={{ flex:2, padding:"12px", background:T.petal, border:`1px solid ${T.border2}`, borderRadius:14, fontSize:13, fontWeight:600, color:T.graphite, cursor:"pointer", fontFamily:T.font }}>🔀 Regenerar todo</button>
+            </div>
+            {generated.map((block,i)=><CreatedBlock key={i} index={i} block={block} onRegenerate={()=>regenerate(i)} />)}
+            <ShareBlock text={buildShareText(generated)} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── SEARCH TRAINING ──────────────────────────────────────────────────────────
+function SearchTraining({ onBack }) {
+  const [query, setQuery] = useState("");
+  const [submitted, setSubmitted] = useState("");
+  const [activeCats, setActiveCats] = useState(["STRENGTH","WOD","TEAMWOD","ENDURANCE"]);
+  const [typeModalOpen, setTypeModalOpen] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchable = useMemo(()=>WORKOUTS.filter(w=>w.cat!=="WARMUP"),[]);
+  
+  // Ejercicios para sugerencias
+  const EXERCISE_SUGGESTIONS = ["snatch","arrancada","power snatch","ps","p.snatch","arrancada fuerza","psnatch","squat snatch","full snatch","clean","cargada","c","pclean","pc","power clean","cargada fuerza","squat clean","jerk","j","push jerk","pj","pjerk","split jerk","thruster","deadlift","dl","dlift","ttb","toes to bar","toes2bar","toes bar","chest to bar","ctb","pull up","pup","bmu","muscle up","bar muscle up","rmu","ring muscle up","handstand push up","hspu","push press","ppress","pp","box jump","bj","bjump","burpee","double under","du","wall ball","wb","row","remo","bike","bike erg","erg","assault","bici","bike ass","run","correr","rope","cuerda","dumbbell","mancuerna","mancuernas","kettlebell","kettle","kb","squat","sentadilla","front squat","front","sentadilla frontal","back squat","back","sentadilla trasera","hs walk","handstand walk","hacer el pino","andar con las manos","wall walk","wall climb","wwalk","wclimb","hs hold","handstand hold"];
+
+  const toggleCat = (cat) => { setActiveCats(prev=>prev.includes(cat)?prev.length>1?prev.filter(c=>c!==cat):prev:[...prev,cat]); setIndex(0); };
+  const results = useMemo(()=>{
+    const kws=submitted.toLowerCase().split(/[\s,]+/).filter(Boolean);
+    return searchable.filter(w=>{ if(!activeCats.includes(w.cat)) return false; if(!kws.length) return true; const t=[w.label,...w.ejercicios,...w.tags].join(" ").toLowerCase(); return kws.every(k=>t.includes(k)); });
+  },[submitted,activeCats,searchable]);
+  const current=results[index]||null;
+  const search=()=>{ setSubmitted(query); setIndex(0); setShowSuggestions(false); };
+  
+  // Filter suggestions based on input
+  const filteredSuggestions = query.trim().length > 0 
+    ? EXERCISE_SUGGESTIONS.filter(s => s.toLowerCase().includes(query.toLowerCase()))
+    : [];
+
+  const selectSuggestion = (suggestion) => {
+    setQuery(suggestion);
+    setShowSuggestions(false);
+  };
+  
+  // Get active type label
+  const getTypeLabel = () => {
+    if(activeCats.length === 4) return "All";
+    if(activeCats.length === 1) {
+      const catMeta = CAT_META[activeCats[0]];
+      return catMeta ? catMeta.label : "All";
+    }
+    return `${activeCats.length} Selected`;
+  };
+  
+  const handleSelectCat = (cat) => {
+    setActiveCats([cat]);
+    setIndex(0);
+    setTypeModalOpen(false);
+  };
+  
+  const handleSelectAll = () => {
+    setActiveCats(["STRENGTH","WOD","TEAMWOD","ENDURANCE"]);
+    setIndex(0);
+    setTypeModalOpen(false);
+  };
+  
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
+      <PageHeader title="SEARCH" sub={`${searchable.length} entrenamientos disponibles`} onBack={onBack} />
+      <div style={{ padding:"20px 20px 60px" }}>
+        {/* Search Input con Sugerencias */}
+        <div style={{ display:"flex", gap:8, marginBottom:14, position:"relative" }}>
+          <div style={{flex:1, position:"relative"}}>
+            <AppInput 
+              value={query} 
+              onChange={e=>{ setQuery(e.target.value); setShowSuggestions(true); }} 
+              onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
+              onKeyDown={e=>e.key==="Enter"&&search()} 
+              placeholder="Busca por nombre..." 
+              autoFocus 
+            />
+            {/* SUGGESTIONS DROPDOWN */}
+            {showSuggestions && filteredSuggestions.length > 0 && (
+              <div style={{
+                position:"absolute",
+                top:"100%",
+                left:0,
+                right:0,
+                background:"white",
+                border:`1px solid ${T.border}`,
+                borderTop:"none",
+                borderRadius:"0 0 10px 10px",
+                maxHeight:"200px",
+                overflowY:"auto",
+                zIndex:10,
+                marginTop:"-4px",
+                boxShadow:"0 4px 12px rgba(0,0,0,0.1)"
+              }}>
+                {filteredSuggestions.map(suggestion => (
+                  <div
+                    key={suggestion}
+                    onClick={() => selectSuggestion(suggestion)}
+                    style={{
+                      padding:"10px 14px",
+                      borderBottom:`1px solid ${T.border2}`,
+                      cursor:"pointer",
+                      fontSize:13,
+                      color:T.text,
+                      transition:"all 0.2s"
+                    }}
+                    onMouseEnter={e => e.target.style.background = T.surface}
+                    onMouseLeave={e => e.target.style.background = "white"}
+                  >
+                    <span style={{color:T.sandy, fontWeight:600}}>{suggestion}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <button onClick={search} style={{ background:T.graphite, border:"none", borderRadius:14, color:T.bg, fontSize:18, fontWeight:600, padding:"0 18px", cursor:"pointer", fontFamily:T.font, flexShrink:0 }}>›</button>
+        </div>
+        
+        {/* Type Dropdown */}
+        <div style={{ marginBottom:20 }}>
+          <button 
+            onClick={() => setTypeModalOpen(!typeModalOpen)}
+            style={{ 
+              width:"100%", 
+              padding:"12px 14px", 
+              border:`1px solid ${T.border}`, 
+              borderRadius:10, 
+              background:T.surface, 
+              fontSize:13, 
+              fontWeight:500, 
+              color:T.text, 
+              cursor:"pointer", 
+              fontFamily:T.font, 
+              display:"flex", 
+              alignItems:"center", 
+              justifyContent:"space-between",
+              boxSizing:"border-box"
+            }}
+          >
+            <span>📋 Type: {getTypeLabel()}</span>
+            <span style={{color:T.muted}}>‣</span>
+          </button>
+        </div>
+        
+        {/* Type Modal */}
+        {typeModalOpen && (
+          <div 
+            style={{
+              position:"fixed",
+              top:0,
+              left:0,
+              right:0,
+              bottom:0,
+              background:"rgba(0,0,0,0.5)",
+              zIndex:100,
+              display:"flex",
+              alignItems:"flex-end"
+            }}
+            onClick={() => setTypeModalOpen(false)}
+          >
+            <div 
+              style={{
+                background:"white",
+                width:"100%",
+                borderRadius:"20px 20px 0 0",
+                padding:"20px",
+                animation:"slideUp 0.3s ease-out"
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{fontSize:15, fontWeight:600, color:T.text, marginBottom:14}}>Filtrar por Type</div>
+              
+              <button 
+                onClick={handleSelectAll}
+                style={{
+                  width:"100%",
+                  padding:"12px 14px",
+                  border:`1px solid ${T.border}`,
+                  borderRadius:10,
+                  marginBottom:8,
+                  cursor:"pointer",
+                  background:activeCats.length===4?T.sandy:"#F5EFEA",
+                  color:activeCats.length===4?"white":T.text,
+                  fontWeight:500,
+                  fontSize:13,
+                  fontFamily:T.font,
+                  transition:"all 0.2s"
+                }}
+              >
+                All Types
+              </button>
+              
+              {["STRENGTH","WOD","TEAMWOD","ENDURANCE"].map(cat => {
+                const m = CAT_META[cat];
+                const isActive = activeCats.length === 1 && activeCats.includes(cat);
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => handleSelectCat(cat)}
+                    style={{
+                      width:"100%",
+                      padding:"12px 14px",
+                      border:`1px solid ${T.border}`,
+                      borderRadius:10,
+                      marginBottom:8,
+                      cursor:"pointer",
+                      background:isActive?T.sandy:"#F5EFEA",
+                      color:isActive?"white":T.text,
+                      fontWeight:500,
+                      fontSize:13,
+                      fontFamily:T.font,
+                      transition:"all 0.2s"
+                    }}
+                  >
+                    {m.icon} {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
+        {/* Results Header */}
+        {submitted && (
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <span style={{ fontSize:13, color:T.muted }}>
+              <b style={{ color:T.text }}>{results.length}</b> resultado{results.length!==1?"s":""}
+              <span style={{ color:T.sandy }}> · "{submitted}"</span>
+            </span>
+            {results.length>1 && <span style={{ fontSize:11, color:T.muted }}>{index+1}/{results.length}</span>}
+          </div>
+        )}
+        
+        {/* Results */}
+        {current && (
+          <>
+            <WorkoutCard workout={current} keyword={submitted} />
+            <ShareBlock text={buildShareTextSingle(current)} />
+            {results.length>1 && (
+              <div style={{ display:"flex", gap:8, marginTop:12 }}>
+                <button 
+                  style={{ flex:1, padding:"12px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, fontSize:13, fontWeight:500, color:index===0?T.border2:T.muted, cursor:index===0?"default":"pointer", fontFamily:T.font }} 
+                  onClick={()=>setIndex(i=>Math.max(0,i-1))} 
+                  disabled={index===0}
+                >
+                  ← Anterior
+                </button>
+                <span style={{ display:"flex", alignItems:"center", fontSize:11, color:T.muted, padding:"0 8px" }}>{index+1}/{results.length}</span>
+                <button 
+                  style={{ flex:1, padding:"12px", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, fontSize:13, fontWeight:500, color:index===results.length-1?T.border2:T.muted, cursor:index===results.length-1?"default":"pointer", fontFamily:T.font }} 
+                  onClick={()=>setIndex(i=>Math.min(results.length-1,i+1))} 
+                  disabled={index===results.length-1}
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
+          </>
+        )}
+        
+        {submitted && results.length===0 && (
+          <div style={{ textAlign:"center", padding:40, color:T.muted }}>
+            <div style={{ fontSize:32, marginBottom:12 }}>◈</div>
+            <div style={{ fontSize:15, fontWeight:500, color:T.text, marginBottom:8 }}>Sin resultados</div>
+            <div style={{ fontSize:13 }}>Prueba otra búsqueda</div>
+          </div>
+        )}
+      </div>
+      
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ─── ADD TRAINING ─────────────────────────────────────────────────────────────
+function AddTraining({ onBack }) {
+  const [tab, setTab] = useState("add");
+  const [custom, setCustom] = useState(loadCustom);
+  const [form, setForm] = useState({ cat:"WOD", label:"", ejercicios:"", tags:"" });
+  const [saved, setSaved] = useState(false);
+  const [showExport, setShowExport] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const exportText = JSON.stringify(custom,null,2);
+  const handleSave = () => {
+    if(!form.label.trim()||!form.ejercicios.trim()) return;
+    const entry={ cat:form.cat, label:form.label.trim(), ejercicios:form.ejercicios.split("\n").map(l=>l.trim()).filter(Boolean), tags:form.tags.split(",").map(t=>t.trim().toLowerCase()).filter(Boolean) };
+    const updated=[...custom,entry]; setCustom(updated); saveCustom(updated);
+    setForm({cat:"WOD",label:"",ejercicios:"",tags:""}); setSaved(true); setTimeout(()=>setSaved(false),2000);
+  };
+  const handleDelete=(i)=>{ const u=custom.filter((_,idx)=>idx!==i); setCustom(u); saveCustom(u); };
+  const handleCopy=()=>{ navigator.clipboard.writeText(exportText).then(()=>{ setCopied(true); setTimeout(()=>setCopied(false),2000); }); };
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
+      <PageHeader title="ADD" sub="Añade tus entrenamientos" onBack={onBack} />
+      <div style={{ padding:"0 20px 60px" }}>
+        <div style={{ display:"flex", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}>
+          {[["add","➕ Nuevo"],["mine",`📋 Mis entradas${custom.length>0?` (${custom.length})`:""}`]].map(([key,lbl])=>(
+            <button key={key} onClick={()=>setTab(key)} style={{ flex:1, background:"none", border:"none", borderBottom:`2px solid ${tab===key?T.sandy:"transparent"}`, color:tab===key?T.text:T.muted, fontFamily:T.font, fontSize:13, fontWeight:tab===key?600:400, padding:"16px 8px", cursor:"pointer" }}>{lbl}</button>
+          ))}
+        </div>
+        {tab==="add" && (
+          <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
+            <div><div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:8 }}>Categoría</div><AppSelect value={form.cat} onChange={e=>setForm(f=>({...f,cat:e.target.value}))}>{Object.entries(CAT_META).map(([k,v])=><option key={k} value={k}>{v.icon} {v.label}</option>)}</AppSelect></div>
+            <div><div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:8 }}>Título</div><AppInput value={form.label} onChange={e=>setForm(f=>({...f,label:e.target.value}))} placeholder="Ej: 5 RFT — Snatch + Pull-Ups" /></div>
+            <div><div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:8 }}>Ejercicios <span style={{ fontWeight:400 }}>(uno por línea)</span></div><AppTextarea value={form.ejercicios} onChange={e=>setForm(f=>({...f,ejercicios:e.target.value}))} placeholder={"5 RFT:\n10 Power Snatch 50/35 kg\n10 Pull-Ups"} /></div>
+            <div><div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:8 }}>Tags <span style={{ fontWeight:400 }}>(separados por coma)</span></div><AppInput value={form.tags} onChange={e=>setForm(f=>({...f,tags:e.target.value}))} placeholder="snatch, pull up, rft" /></div>
+            <button onClick={handleSave} style={{ width:"100%", padding:"17px", background:saved?`${T.green}22`:T.graphite, border:saved?`1px solid ${T.green}`:"none", borderRadius:16, fontSize:15, fontWeight:600, color:saved?T.green:T.bg, cursor:"pointer", fontFamily:T.font }}>{saved?"✓ Guardado":"Guardar entrada"}</button>
+            <p style={{ fontSize:11, color:T.muted, textAlign:"center", lineHeight:1.6 }}>💾 Se guarda en este dispositivo. Exporta y envíalo al coach para añadirlo permanentemente.</p>
+          </div>
+        )}
+        {tab==="mine" && (
+          <div>
+            {custom.length===0 ? (
+              <div style={{ textAlign:"center", padding:40, color:T.muted }}><div style={{ fontSize:32, marginBottom:12 }}>＋</div><div style={{ fontSize:15, fontWeight:500, color:T.text, marginBottom:8 }}>Sin entradas propias</div><div style={{ fontSize:13 }}>Añade tu primer entrenamiento en la pestaña Nuevo</div></div>
+            ) : (<>
+              <button onClick={()=>setShowExport(v=>!v)} style={{ width:"100%", padding:"15px", background:"transparent", border:`1px solid ${T.taupe}`, borderRadius:14, fontSize:13, fontWeight:500, color:T.taupe, cursor:"pointer", fontFamily:T.font, marginBottom:16 }}>{showExport?"✕ Cerrar exportación":`⬇️ Exportar mis entradas (${custom.length})`}</button>
+              {showExport && <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", marginBottom:16 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 14px", borderBottom:`1px solid ${T.border}` }}>
+                  <span style={{ fontSize:11, color:T.muted }}>Copia y pégalo en el chat</span>
+                  <button onClick={handleCopy} style={{ background:copied?`${T.green}22`:T.petal, border:`1px solid ${copied?T.green:T.border2}`, color:copied?T.green:T.taupe, borderRadius:20, fontSize:11, fontWeight:600, padding:"5px 12px", cursor:"pointer", fontFamily:T.font }}>{copied?"✓ Copiado":"Copiar"}</button>
+                </div>
+                <pre style={{ margin:0, padding:"12px 14px", fontSize:10, color:T.muted, overflowX:"auto", whiteSpace:"pre-wrap", wordBreak:"break-all", lineHeight:1.6 }}>{exportText}</pre>
+              </div>}
+              {custom.map((w,i)=>{
+                const m=CAT_META[w.cat]||{color:T.muted,bg:T.surface,icon:"•",label:w.cat};
+                return <div key={i} style={{ border:`1px solid ${T.border}`, borderRadius:16, overflow:"hidden", marginBottom:10 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 16px", background:T.surface, borderBottom:`1px solid ${T.border}` }}>
+                    <div><CatBadge cat={w.cat} /><div style={{ fontSize:13, fontWeight:600, color:T.text, marginTop:4 }}>{w.label}</div></div>
+                    <button onClick={()=>handleDelete(i)} style={{ background:"none", border:`1px solid ${T.border2}`, borderRadius:20, color:T.muted, fontSize:12, padding:"4px 10px", cursor:"pointer", fontFamily:T.font, flexShrink:0 }}>✕</button>
+                  </div>
+                  <div style={{ padding:"12px 16px" }}>{w.ejercicios.map((ej,j)=><div key={j} style={{ fontSize:13, color:T.muted, padding:"3px 0", lineHeight:1.6 }}>{ej}</div>)}</div>
+                </div>;
+              })}
+            </>)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── UNIT CONVERTER ───────────────────────────────────────────────────────────
+function UnitConverter({ onBack }) {
+  const [mode, setMode] = useState("weight"); // weight | length
+  const [value, setValue] = useState("100");
+  const [direction, setDirection] = useState("kg-to-lb"); // kg-to-lb | lb-to-kg | m-to-ft | ft-to-m
+
+  const convert = (val, from, to) => {
+    const numVal = parseFloat(val);
+    if (isNaN(numVal)) return "0.00";
+    if (from === "kg" && to === "lb") return (numVal * 2.20462).toFixed(2);
+    if (from === "lb" && to === "kg") return (numVal / 2.20462).toFixed(2);
+    if (from === "m" && to === "ft") return (numVal * 3.28084).toFixed(2);
+    if (from === "ft" && to === "m") return (numVal / 3.28084).toFixed(2);
+    return "0.00";
+  };
+
+  const getConvertData = () => {
+    if (mode === "weight") {
+      const [from, to] = direction === "kg-to-lb" ? ["kg", "lb"] : ["lb", "kg"];
+      return { from, to, result: convert(value, from, to) };
+    } else {
+      const [from, to] = direction === "m-to-ft" ? ["m", "ft"] : ["ft", "m"];
+      return { from, to, result: convert(value, from, to) };
+    }
+  };
+
+  const { from, to, result } = getConvertData();
+
+  const toggleDirection = () => {
+    if (mode === "weight") {
+      setDirection(direction === "kg-to-lb" ? "lb-to-kg" : "kg-to-lb");
+    } else {
+      setDirection(direction === "m-to-ft" ? "ft-to-m" : "m-to-ft");
+    }
+  };
+
+  // Handle input - accept both comma and dot for decimals
+  const handleValueChange = (e) => {
+    let inputValue = e.target.value;
+    
+    // If input is empty, set to "0"
+    if (inputValue === '') {
+      setValue('0');
+      return;
+    }
+    
+    // Replace comma with dot immediately for consistency
+    inputValue = inputValue.replace(/,/g, '.');
+    
+    // Remove leading zeros but keep at least one digit
+    inputValue = inputValue.replace(/^0+(?=[1-9])/, '');
+    
+    // Ensure only one decimal point
+    const parts = inputValue.split('.');
+    if (parts.length > 2) {
+      inputValue = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    // Limit to 2 decimal places
+    if (parts[1]) {
+      inputValue = parts[0] + '.' + parts[1].substring(0, 2);
+    }
+    
+    setValue(inputValue === '' || inputValue === '.' ? '0' : inputValue);
+  };
+
+  // Generate reference table
+  const getRefTable = () => {
+    if (mode === "weight") {
+      const rows = [];
+      for (let i = 10; i <= 200; i += 10) {
+        rows.push({ from: `${i} kg`, to: `${(i * 2.20462).toFixed(2)} lb` });
+      }
+      return rows;
+    } else {
+      const rows = [];
+      for (let i = 5; i <= 100; i += 5) {
+        rows.push({ from: `${i} m`, to: `${(i * 3.28084).toFixed(2)} ft` });
+      }
+      return rows;
+    }
+  };
+
+  const refTable = getRefTable();
+
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
+      <PageHeader title="UNIT CONVERTER" onBack={onBack} />
+      <div style={{ padding:"20px 20px 40px" }}>
+
+        {/* Tabs */}
+        <div style={{ display:"flex", background:T.surface, borderRadius:14, border:`1px solid ${T.border}`, padding:4, marginBottom:28, gap:4 }}>
+          <button onClick={()=>{setMode("weight");setDirection("kg-to-lb");}} style={{ flex:1, padding:10, borderRadius:10, border:"none", fontSize:13, fontWeight:600, fontFamily:T.font, textAlign:"center", cursor:"pointer", background:mode==="weight"?T.bg:"transparent", color:mode==="weight"?T.text:T.muted, boxShadow:mode==="weight"?"0 1px 4px rgba(49,47,47,0.1)":"none" }}>⚖ Weight</button>
+          <button onClick={()=>{setMode("length");setDirection("m-to-ft");}} style={{ flex:1, padding:10, borderRadius:10, border:"none", fontSize:13, fontWeight:600, fontFamily:T.font, textAlign:"center", cursor:"pointer", background:mode==="length"?T.bg:"transparent", color:mode==="length"?T.text:T.muted, boxShadow:mode==="length"?"0 1px 4px rgba(49,47,47,0.1)":"none" }}>📏 Length</button>
+        </div>
+
+        {/* Converter card */}
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:20, padding:"24px 20px", marginBottom:16 }}>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:8 }}>Value to convert</div>
+          
+          <input 
+            type="number" 
+            inputMode="decimal"
+            placeholder="0"
+            step="0.01"
+            value={value} 
+            onChange={handleValueChange}
+            style={{ width:"100%", background:T.bg, border:`1px solid ${T.border}`, borderRadius:14, padding:"16px 18px", fontSize:18, fontWeight:600, fontFamily:"'DM Mono',monospace", color:T.text, marginBottom:12, boxSizing:"border-box" }} 
+          />
+          
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:T.bg, border:`1px solid ${T.border}`, borderRadius:14, padding:"16px 18px", marginBottom:12 }}>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:14, fontWeight:600, color:T.sandy }}>{from}</span>
+            <button onClick={toggleDirection} style={{ width:44, height:44, borderRadius:"50%", background:T.bg, border:`1px solid ${T.border}`, fontSize:20, color:T.sandy, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:T.font }}>⇄</button>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:14, fontWeight:600, color:T.sandy }}>{to}</span>
+          </div>
+
+          <div style={{ background:T.bg, border:`1px solid rgba(248,161,99,0.3)`, borderRadius:14, padding:"16px 18px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:28, fontWeight:700, color:T.sandy, letterSpacing:"-1px" }}>{result}</span>
+            <span style={{ fontSize:14, fontWeight:600, color:T.taupe }}>{to}</span>
+          </div>
+        </div>
+
+        {/* Reference table */}
+        <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:10 }}>Conversion table</div>
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:16, overflow:"hidden" }}>
+          <div style={{ background:T.graphite, padding:"9px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.1em", color:T.taupe, textTransform:"uppercase" }}>{mode==="weight"?"kg":"meters"}</span>
+            <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.1em", color:T.taupe, textTransform:"uppercase" }}>{mode==="weight"?"lb":"feet"}</span>
+          </div>
+          {refTable.map((row,i) => (
+            <div key={i} style={{ display:"flex", alignItems:"center", padding:"11px 16px", borderBottom:i<refTable.length-1?`1px solid ${T.border}`:"none", fontSize:13 }}>
+              <span style={{ fontWeight:600, color:T.text, flex:1, fontFamily:"'DM Mono',monospace" }}>{row.from}</span>
+              <span style={{ fontSize:13, color:T.sandy, margin:"0 12px", opacity:0.6 }}>→</span>
+              <span style={{ fontWeight:600, color:T.sandy, flex:1, fontFamily:"'DM Mono',monospace", textAlign:"right" }}>{row.to}</span>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ─── TIMER TRAINING ───────────────────────────────────────────────────────────
+function fmtTime(totalSec) {
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+// Web Audio beep
+let _audioCtx = null;
+function beep(freq=880, duration=200, when=0, vol=0.9) {
+  try {
+    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = _audioCtx;
+    const t = ctx.currentTime + when;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = freq;
+    osc.type = "square";
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + duration/1000);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + duration/1000 + 0.05);
+  } catch(e) {}
+}
+// 3 countdown beeps — one per second, synced with clock
+function beepCountdown3() { beep(660,180,0); beep(660,180,1); beep(880,300,2); }
+// 1 beep on interval/round change
+function beepChange() { beep(880,200,0); }
+// 3 beeps at end
+function beepEnd() { beep(990,250,0); beep(990,250,0.4); beep(990,350,0.8); }
+
+// Time picker component (mm:ss via two rolling controls)
+function TimePicker({ totalSec, onChange, label }) {
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  const adj = (dm, ds) => {
+    let nm = m + dm, ns = s + ds;
+    if (ns >= 60) { ns = 0; nm += 1; }
+    if (ns < 0) { ns = 59; nm = Math.max(0, nm-1); }
+    nm = Math.max(0, Math.min(99, nm));
+    onChange(nm*60 + ns);
+  };
+  return (
+    <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:16, padding:"16px 20px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <span style={{ fontSize:14, color:T.text }}>{label}</span>
+      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+        <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
+          <button onClick={()=>adj(1,0)} style={tpBtn}>▲</button>
+          <button onClick={()=>adj(-1,0)} style={tpBtn}>▼</button>
+        </div>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:28, fontWeight:700, color:T.sandy, letterSpacing:"-1px", minWidth:88, textAlign:"center" }}>
+          {String(m).padStart(2,"0")}:{String(s).padStart(2,"0")}
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
+          <button onClick={()=>adj(0,1)} style={tpBtn}>▲</button>
+          <button onClick={()=>adj(0,-1)} style={tpBtn}>▼</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+const tpBtn = { width:28, height:22, borderRadius:7, border:`1px solid ${T.border}`, background:T.bg, color:T.muted, fontSize:9, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"sans-serif" };
+
+function Stepper({ value, onChange, min=1, max=99 }) {
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+      <button onClick={()=>onChange(Math.max(min, value-1))} style={stBtn}>−</button>
+      <span style={{ fontSize:16, fontWeight:700, color:T.sandy, minWidth:40, textAlign:"center" }}>{value}</span>
+      <button onClick={()=>onChange(Math.min(max, value+1))} style={stBtn}>+</button>
+    </div>
+  );
+}
+const stBtn = { width:32, height:32, borderRadius:"50%", border:`1px solid ${T.border}`, background:T.bg, fontSize:18, color:T.text, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontFamily:"sans-serif" };
+
+function TimerTraining({ onBack }) {
+  const [mode, setMode] = useState("updown"); // updown | interval
+  const [phase, setPhase] = useState("config"); // config | active
+
+  // UP/DOWN config
+  const [direction, setDirection] = useState("desc");
+  const [updownSec, setUpdownSec] = useState(15*60);
+
+  // INTERVAL config
+  const [rounds, setRounds] = useState(3);
+  const [intervals, setIntervals] = useState([60]); // array of seconds, max 4
+
+  // Common
+  const [countdownOn, setCountdownOn] = useState(true);
+  const [countdownSec, setCountdownSec] = useState(10);
+  const [soundOn, setSoundOn] = useState(true);
+
+  // Active state
+  const [running, setRunning] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [inCountdown, setInCountdown] = useState(false);
+  const [cdLeft, setCdLeft] = useState(0);
+  const [elapsed, setElapsed] = useState(0); // for updown asc / interval tracking
+  const [curRound, setCurRound] = useState(1);
+  const [curInterval, setCurInterval] = useState(0);
+  const [intLeft, setIntLeft] = useState(0);
+  const intervalRef = React.useRef(null);
+
+  const totalIntervalSec = intervals.reduce((a,b)=>a+b, 0);
+  const totalWorkout = rounds * totalIntervalSec;
+
+  const addInterval = () => { if (intervals.length < 4) setIntervals([...intervals, 60]); };
+  const removeInterval = (i) => { if (intervals.length > 1) setIntervals(intervals.filter((_,idx)=>idx!==i)); };
+  const updateInterval = (i, sec) => setIntervals(intervals.map((v,idx)=>idx===i?sec:v));
+
+  // Lock orientation to landscape on active (best effort)
+  useEffect(() => {
+    if (phase === "active") {
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock("landscape").catch(()=>{});
+        }
+      } catch(e) {}
+    } else {
+      try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e) {}
+    }
+  }, [phase]);
+
+  // Keep screen active during timer (Screen Wake Lock API)
+  useEffect(() => {
+    let wakeLock = null;
+    const acquireWakeLock = async () => {
+      try {
+        if (navigator.wakeLock) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', async () => {
+            try {
+              if (phase === "active") {
+                wakeLock = await navigator.wakeLock.request('screen');
+              }
+            } catch(e) {}
+          });
+        }
+      } catch(e) {}
+    };
+    if (phase === "active") {
+      acquireWakeLock();
+    } else if (wakeLock) {
+      wakeLock.release().then(() => { wakeLock = null; }).catch(()=>{});
+    }
+    return () => {
+      if (wakeLock) {
+        wakeLock.release().catch(()=>{});
+        wakeLock = null;
+      }
+    };
+  }, [phase]);
+
+  const togglePause = () => {
+    setPaused(p => !p);
+  };
+
+  const startTimer = () => {
+    if (soundOn) {
+      try { if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+    }
+    setPhase("active");
+    if (countdownOn) {
+      setInCountdown(true);
+      setCdLeft(countdownSec);
+      // NO beeps at countdown start — only beeps on last 3 seconds
+    } else {
+      beginWorkoutState();
+    }
+    setRunning(true);
+  };
+
+  const beginWorkoutState = () => {
+    setInCountdown(false);
+    if (mode === "updown") {
+      setElapsed(direction === "asc" ? 0 : updownSec);
+    } else {
+      setCurRound(1); setCurInterval(0); setIntLeft(intervals[0]);
+    }
+    if (soundOn) beepChange();
+  };
+
+  const exitTimer = () => {
+    setRunning(false);
+    setPaused(false);
+    setInCountdown(false);
+    setPhase("config");
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
+
+  // Main tick
+  useEffect(() => {
+    if (!running || phase !== "active" || paused) return;
+    intervalRef.current = setInterval(() => {
+
+      // ── COUNTDOWN ──
+      if (inCountdown) {
+        setCdLeft(prev => {
+          const next = prev - 1;
+          if (next <= 0) { beginWorkoutState(); return 0; }
+          // beep on last 3 seconds of countdown (synced: when prev=4,3,2 → next=3,2,1)
+          if (soundOn && next <= 3) beep(next === 1 ? 880 : 660, 180, 0);
+          return next;
+        });
+        return;
+      }
+
+      // ── UP/DOWN ──
+      if (mode === "updown") {
+        setElapsed(prev => {
+          if (direction === "asc") {
+            const next = prev + 1;
+            const remaining = updownSec - next;
+            if (remaining <= 0) { if (soundOn) beepEnd(); setRunning(false); return updownSec; }
+            if (soundOn && remaining <= 3) beep(remaining === 1 ? 880 : 660, 180, 0);
+            return next;
+          } else {
+            const next = prev - 1;
+            if (next <= 0) { if (soundOn) beepEnd(); setRunning(false); return 0; }
+            if (soundOn && next <= 3) beep(next === 1 ? 880 : 660, 180, 0);
+            return next;
+          }
+        });
+        return;
+      }
+
+      // ── INTERVAL ──
+      setIntLeft(prev => {
+        const next = prev - 1;
+        if (next <= 0) {
+          let ni = curInterval + 1;
+          let nr = curRound;
+          if (ni >= intervals.length) { ni = 0; nr += 1; }
+          if (nr > rounds) {
+            if (soundOn) beepEnd();
+            setRunning(false);
+            return 0;
+          }
+          setCurInterval(ni); setCurRound(nr);
+          if (soundOn) beepChange();
+          return intervals[ni];
+        }
+        // beep on last 3 seconds of interval
+        if (soundOn && next <= 3) beep(next === 1 ? 880 : 660, 180, 0);
+        return next;
+      });
+
+    }, 1000);
+    return () => clearInterval(intervalRef.current);
+  }, [running, phase, paused, inCountdown, mode, direction, curInterval, curRound, intervals, rounds, updownSec, soundOn]);
+
+  const intervalColors = ["#F8A163", "#DECEC5", "#F8A163", "#DECEC5"]; // Sandy, Petal, Sandy, Petal
+  const getIntervalColor = (intervalIndex) => intervalColors[intervalIndex % intervalColors.length];
+
+  // ─── ACTIVE SCREEN ───
+  if (phase === "active") {
+    const globalRound = curRound;
+    const globalTotal = rounds;
+    return (
+      <div onClick={togglePause} style={{ position:"fixed", inset:0, background:T.graphite, zIndex:9999, display:"flex", flexDirection:"column", cursor:"pointer" }}>
+        <div style={{ height:3, background:T.sandy, flexShrink:0 }} />
+        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
+          {/* Exit */}
+          <button onClick={(e)=>{e.stopPropagation();exitTimer();}} style={{ position:"absolute", top:18, left:20, width:38, height:38, borderRadius:"50%", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.4)", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10 }}>✕</button>
+
+          {/* Pause indicator */}
+          {paused && (
+            <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%, -50%)", background:"rgba(0,0,0,0.6)", padding:"20px 32px", borderRadius:16, zIndex:5 }}>
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:20, fontWeight:700, color:"#FFFAFA", letterSpacing:"-0.5px", textAlign:"center" }}>PAUSED</div>
+            </div>
+          )}
+
+          {inCountdown ? (
+            // Countdown: muted taupe color, not sandy
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"45vw", fontWeight:700, color:T.taupe, lineHeight:1, opacity:0.85 }}>{cdLeft}</div>
+
+          ) : mode === "interval" ? (
+            // Interval: split screen left=rounds, right=time, no overlap
+            // Use a flex row so both sides are constrained and never overlap
+            <div style={{ display:"flex", alignItems:"center", width:"100%", height:"100%", padding:"8px 16px 8px 64px" }}>
+              {/* Rounds column — left 30% */}
+              <div style={{ width:"30%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", lineHeight:0.85 }}>
+                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"18vw", fontWeight:700, color:T.taupe, letterSpacing:"-0.04em" }}>
+                  {String(globalRound).padStart(2,"0")}
+                </span>
+                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"9vw", fontWeight:400, color:T.muted, opacity:0.45, letterSpacing:"-0.03em" }}>
+                  {String(globalTotal).padStart(2,"0")}
+                </span>
+              </div>
+              {/* Divider line */}
+              <div style={{ width:1, height:"55%", background:"rgba(255,255,255,0.08)", flexShrink:0, margin:"0 8px" }} />
+              {/* Time column — right 65% */}
+              <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:"22vw", fontWeight:700, color:getIntervalColor(curInterval), letterSpacing:"-0.04em", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
+                  {fmtTime(intLeft)}
+                </span>
+              </div>
+            </div>
+
+          ) : (
+            // UP/DOWN: time centered
+            <>
+              <div style={{ position:"absolute", top:20, right:28, fontSize:11, fontWeight:700, letterSpacing:"0.15em", color:T.muted, textTransform:"uppercase", opacity:0.4 }}>{direction === "asc" ? "▲ ASC" : "▼ DESC"}</div>
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:"32vw", fontWeight:700, color:T.sandy, letterSpacing:"-0.04em", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
+                {fmtTime(elapsed)}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ─── CONFIG SCREEN ───
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, fontFamily:T.font }}>
+      <PageHeader title="Timer Training" sub="Configura tu cronómetro" onBack={onBack} />
+      <div style={{ padding:"20px 20px 120px" }}>
+
+        {/* Mode selector */}
+        <div style={{ display:"flex", gap:10, marginBottom:28 }}>
+          {[["updown","⬆⬇ UP/DOWN"],["interval","🔁 INTERVAL"]].map(([k,lbl])=>(
+            <button key={k} onClick={()=>setMode(k)} style={{ flex:1, padding:14, borderRadius:16, border:`1px solid ${mode===k?T.graphite:T.border}`, background:mode===k?T.graphite:T.surface, color:mode===k?"#FFFAFA":T.muted, fontSize:13, fontWeight:600, fontFamily:T.font, cursor:"pointer" }}>{lbl}</button>
+          ))}
+        </div>
+
+        {mode === "updown" && (
+          <>
+            <div style={secLabel}>Dirección</div>
+            <div style={{ display:"flex", borderRadius:12, overflow:"hidden", border:`1px solid ${T.border}`, marginBottom:20 }}>
+              <button onClick={()=>setDirection("asc")} style={{ flex:1, padding:"12px 14px", fontSize:13, fontWeight:600, fontFamily:T.font, border:"none", cursor:"pointer", background:direction==="asc"?T.graphite:T.surface, color:direction==="asc"?"#FFFAFA":T.muted }}>▲ Ascendente</button>
+              <button onClick={()=>setDirection("desc")} style={{ flex:1, padding:"12px 14px", fontSize:13, fontWeight:600, fontFamily:T.font, border:"none", cursor:"pointer", background:direction==="desc"?T.graphite:T.surface, color:direction==="desc"?"#FFFAFA":T.muted }}>▼ Descendente</button>
+            </div>
+            <div style={secLabel}>Tiempo</div>
+            <div style={{ marginBottom:20 }}>
+              <TimePicker totalSec={updownSec} onChange={setUpdownSec} label="Duración" />
+            </div>
+          </>
+        )}
+
+        {mode === "interval" && (
+          <>
+            <div style={secLabel}>Rondas</div>
+            <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:16, padding:"14px 16px", display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+              <span style={{ fontSize:14, color:T.text }}>Número de rondas</span>
+              <Stepper value={rounds} onChange={setRounds} min={1} max={99} />
+            </div>
+
+            <div style={{ ...secLabel, display:"flex", justifyContent:"space-between" }}>
+              <span>Intervalos</span>
+              <span style={{ fontSize:10, color:T.muted, fontWeight:400, textTransform:"none", letterSpacing:0 }}>máx. 4</span>
+            </div>
+            {intervals.map((sec, i) => (
+              <div key={i} style={{ borderRadius:14, border:`1px solid ${T.border}`, overflow:"hidden", marginBottom:10 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 14px", background:T.surface, borderBottom:`1px solid ${T.border}` }}>
+                  <span style={{ fontSize:12, fontWeight:700, letterSpacing:"0.06em", color:T.sandy, textTransform:"uppercase" }}>Intervalo {i+1}</span>
+                  {intervals.length > 1 && <button onClick={()=>removeInterval(i)} style={{ fontSize:11, color:T.muted, background:"none", border:"none", cursor:"pointer", fontFamily:T.font }}>✕ eliminar</button>}
+                </div>
+                <div style={{ background:T.bg, padding:"10px 14px" }}>
+                  <TimePicker totalSec={sec} onChange={(s)=>updateInterval(i,s)} label="Tiempo" />
+                </div>
+              </div>
+            ))}
+            {intervals.length < 4 && (
+              <button onClick={addInterval} style={{ width:"100%", padding:13, borderRadius:14, border:`1px dashed ${T.border}`, background:"transparent", fontSize:13, fontWeight:500, color:T.muted, fontFamily:T.font, cursor:"pointer" }}>＋ Añadir intervalo</button>
+            )}
+
+            <div style={{ background:"rgba(248,161,99,0.08)", border:"1px solid rgba(248,161,99,0.25)", borderRadius:14, padding:"14px 16px", margin:"16px 0" }}>
+              <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", color:T.sandy, textTransform:"uppercase", marginBottom:6 }}>Vista previa</div>
+              <div style={{ fontSize:14, color:T.text, fontWeight:500 }}>
+                {rounds} rondas × {intervals.length>1?`(${intervals.map(s=>fmtTime(s).replace(/^00:/,'').replace(/^0/,'')).join(" + ")})`:fmtTime(intervals[0])} = {fmtTime(totalWorkout)} total
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Countdown toggle */}
+        <div style={{ background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden", marginBottom:12 }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 16px" }}>
+            <span style={{ fontSize:14, color:T.text }}>⏳ Cuenta atrás inicial</span>
+            <Toggle on={countdownOn} onClick={()=>setCountdownOn(v=>!v)} />
+          </div>
+          {countdownOn && (
+            <div style={{ borderTop:`1px solid ${T.border}` }}>
+              <TimePicker totalSec={countdownSec} onChange={setCountdownSec} label="Tiempo de preparación" />
+            </div>
+          )}
+        </div>
+
+        {/* Sound toggle */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:T.surface, border:`1px solid ${T.border}`, borderRadius:14, padding:"14px 16px" }}>
+          <span style={{ fontSize:13, color:T.text, fontWeight:500 }}>🔔 Señales sonoras</span>
+          <Toggle on={soundOn} onClick={()=>setSoundOn(v=>!v)} />
+        </div>
+      </div>
+
+      {/* Start button fixed bottom */}
+      <div style={{ position:"fixed", bottom:0, left:0, right:0, padding:"16px 20px max(20px, env(safe-area-inset-bottom))", background:`linear-gradient(to top, ${T.bg} 70%, transparent)` }}>
+        <button onClick={startTimer} style={{ width:"100%", padding:18, background:T.sandy, border:"none", borderRadius:16, fontSize:16, fontWeight:700, color:"#FFFAFA", fontFamily:T.font, cursor:"pointer" }}>Iniciar →</button>
+      </div>
+    </div>
+  );
+}
+
+const secLabel = { fontSize:11, fontWeight:700, letterSpacing:"0.08em", color:T.muted, textTransform:"uppercase", marginBottom:10 };
+
+function Toggle({ on, onClick }) {
+  return (
+    <button onClick={onClick} style={{ width:44, height:26, borderRadius:13, position:"relative", background:on?T.sandy:T.border, border:"none", cursor:"pointer", flexShrink:0, transition:"background 0.2s" }}>
+      <div style={{ position:"absolute", width:20, height:20, background:"white", borderRadius:"50%", top:3, left:on?21:3, boxShadow:"0 1px 3px rgba(0,0,0,0.2)", transition:"left 0.2s" }} />
+    </button>
+  );
+}
+
+// ─── OPEN GAMES COMPONENTS ────────────────────────────────────────────────────
+function OpenGamesYears({onNav, onBack}) {
+  const years = Array.from({length: 16}, (_, i) => 2011 + i);
+  return (
+    <div style={{minHeight:"100vh", background:T.bg, fontFamily:T.font}}>
+      <PageHeader title="OPEN GAMES" onBack={onBack} />
+      <div style={{padding:"20px 20px 40px"}}>
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px'}}>
+          {years.map(year => {
+            const wods = WORKOUTS.filter(w => w.tags && w.tags.includes(String(year)) && w.tags.includes('open games'));
+            return (
+              <button
+                key={year}
+                onClick={() => onNav(`openGames-year-${year}`)}
+                style={{
+                  padding: '16px',
+                  background: T.surface2,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontFamily: T.font,
+                  textAlign: 'left'
+                }}
+                onMouseEnter={(e) => e.target.style.background = T.surface}
+                onMouseLeave={(e) => e.target.style.background = T.surface2}
+              >
+                <div style={{fontSize: '18px', fontWeight: '300', color: T.text, marginBottom: '4px'}}>{year}</div>
+                <div style={{fontSize: '12px', color: T.muted, fontWeight: '300'}}>{wods.length} WODs</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OpenGamesYear({year, onNav, onBack}) {
+  const wods = WORKOUTS.filter(w => w.tags && w.tags.includes(String(year)) && w.tags.includes('open games')).sort((a,b) => a.id - b.id);
+  const [expandedId, setExpandedId] = useState(null);
+  
+  // Parse WOD details for formatting
+  const parseWodDescription = (ejercicios) => {
+    if (!ejercicios || ejercicios.length === 0) return null;
+    
+    let wodType = '';
+    let exercises = [];
+    let weights = [];
+    
+    ejercicios.forEach(line => {
+      const upper = line.toUpperCase();
+      if (upper.includes('AMRAP') || upper.includes('FOR TIME') || upper.includes('FOR LOAD') || upper.includes('1RM') || upper.includes('CADA') || upper.includes('CADA 3')) {
+        wodType = line;
+      } else if (line.includes('Rx:') || line.includes('kg') || line.includes('lb')) {
+        weights.push(line);
+      } else if (line.trim()) {
+        exercises.push(line);
+      }
+    });
+    
+    return { wodType, exercises, weights };
+  };
+  
+  return (
+    <div style={{minHeight:"100vh", background:T.bg, fontFamily:T.font}}>
+      <PageHeader title={`${year}`} onBack={onBack} />
+      <div style={{padding:"20px 20px 40px"}}>
+        <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+          {wods.map(wod => {
+            const parsed = parseWodDescription(wod.ejercicios);
+            const wodNumber = wod.tags ? wod.tags.find(t => t.includes('.')) : '';
+            
+            return (
+              <div key={wod.id} style={{background: T.surface, border: `1px solid ${T.border}`, borderRadius: '6px', overflow: 'hidden'}}>
+                <button
+                  onClick={() => setExpandedId(expandedId === wod.id ? null : wod.id)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontFamily: T.font
+                  }}
+                >
+                  <div style={{fontWeight: '400', color: T.text, fontSize: '16px'}}>{wodNumber}</div>
+                  <div style={{color: T.sandy, fontSize: '14px', fontWeight: '300'}}>{expandedId === wod.id ? '▼' : '▶'}</div>
+                </button>
+                
+                {expandedId === wod.id && parsed && (
+                  <div style={{padding: '12px', borderTop: `1px solid ${T.border2}`, background: T.bg}}>
+                    {parsed.wodType && (
+                      <div style={{fontSize: '12px', color: T.sandy, fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>
+                        {parsed.wodType}
+                      </div>
+                    )}
+                    
+                    <div style={{fontSize: '13px', color: T.text, lineHeight: '1.7', marginBottom: parsed.weights.length > 0 ? '8px' : '0'}}>
+                      {parsed.exercises.map((ex, i) => (
+                        <div key={i} style={{marginBottom: '4px', color: T.text}}>
+                          {ex}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {parsed.weights.length > 0 && (
+                      <div style={{fontSize: '11px', color: T.muted, paddingTop: '8px', borderTop: `1px solid ${T.border2}`, marginTop: '8px'}}>
+                        {parsed.weights.map((w, i) => (
+                          <div key={i} style={{marginTop: i > 0 ? '4px' : '0'}}>
+                            {w}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ROOT ─────────────────────────────────────────────────────────────────────
+function App() {
+  const [screen, setScreen] = useState("home");
+  return (
+    <>
+      {screen==="home"   && <Home onNav={setScreen} />}
+      {screen==="training" && <TrainingMenu onNav={setScreen} onBack={()=>setScreen("home")} />}
+      {screen==="search-menu" && <SearchMenu onNav={setScreen} onBack={()=>setScreen("training")} />}
+      {screen==="officials-menu" && <OfficialsMenu onNav={setScreen} onBack={()=>setScreen("search-menu")} />}
+      {screen==="openGames-years" && <OpenGamesYears onNav={setScreen} onBack={()=>setScreen("officials-menu")} />}
+      {screen?.startsWith("openGames-year-") && <OpenGamesYear year={parseInt(screen.split('-')[2])} onNav={setScreen} onBack={()=>setScreen("openGames-years")} />}
+      {screen==="create" && <CreateTraining onBack={()=>setScreen("training")} />}
+      {screen==="search" && <SearchTraining onBack={()=>setScreen("search-menu")} />}
+      {screen==="timer"  && <TimerTraining onBack={()=>setScreen("home")} />}
+      {screen==="converter" && <UnitConverter onBack={()=>setScreen("home")} />}
+      {screen==="add"    && <AddTraining onBack={()=>setScreen("training")} />}
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/wod-gen/sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
